@@ -23,23 +23,22 @@ export class AuthService {
       const verificaionCode = await this.authRepository.findUniqueVerificationCode({
         email: body.email,
         code: body.code,
-        type: TypeOfVerificationCode.REGISTER
+        type: TypeOfVerificationCode.REGISTER,
       })
       if (!verificaionCode) {
         throw new UnprocessableEntityException([
           {
-            message: "OTP not valid",
-            path: 'code'
-          }
+            message: 'OTP not valid',
+            path: 'code',
+          },
         ])
       }
       if (verificaionCode.expiresAt < new Date()) {
         throw new UnprocessableEntityException([
-
           {
             message: 'OTP expired',
-            path: 'code'
-          }
+            path: 'code',
+          },
         ])
       }
       const clientRoleId = await this.rolesService.getClientRoleId()
