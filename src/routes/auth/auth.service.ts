@@ -26,7 +26,6 @@ export class AuthService {
           roleId: clientRoleId,
         },
         omit: {
-          password: true,
           totpSecret: true,
         },
       })

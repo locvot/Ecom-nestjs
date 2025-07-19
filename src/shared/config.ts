@@ -22,15 +22,15 @@ const ConfigSchema = z.object({
   ADMIN_NAME: z.string(),
   ADMIN_EMAIL: z.string(),
   ADMIN_PASSWORD: z.string(),
-  ADMIN_PHONE_NUMBER: z.string()
+  ADMIN_PHONE_NUMBER: z.string(),
 })
 
 const configServer = ConfigSchema.safeParse(process.env)
 
-if(!configServer.success) {
+if (!configServer.success) {
   console.log('Variables in file .env are not valid.')
   console.error(configServer.error)
-   process.exit(1)
+  process.exit(1)
 }
 
 const envConfig = configServer.data
