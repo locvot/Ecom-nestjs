@@ -99,7 +99,7 @@ export class AuthService {
         },
       ])
     }
-    return verificationCode
+    return { message: 'Send OTP successfully' }
   }
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
