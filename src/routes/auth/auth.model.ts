@@ -56,7 +56,21 @@ export const LoginBodySchema = UserSchema.pick({
     code: z.string().length(6).optional(),
   })
   .strict()
-
+  .superRefine(({ totpCode, code }, ctx) => {
+    const message = 'Dont provide 2FA and OTP. Just provide 2FA or OTP'
+    if ((totpCode !== undefined) === (code !== undefined)) {
+      ctx.addIssue({
+        path: ['totopCode'],
+        message,
+        code: 'custom',
+      })
+      ctx.addIssue({
+        path: ['code'],
+        message,
+        code: 'custom',
+      })
+    }
+  })
 export const LoginResSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),

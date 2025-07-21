@@ -22,8 +22,10 @@ import {
   EmailAlreadyExistsException,
   EmailNotFoundException,
   FailedToSendOTPException,
+  InvalidOTPAndCodeException,
   InvalidOTPException,
   InvalidPasswordException,
+  InvalidTOTPException,
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   TOTPAlreadyEnaBledException,
@@ -40,7 +42,7 @@ export class AuthService {
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly emailService: EmailService,
     private readonly tokenService: TokenService,
-    private readonly twoFactorService: TwoFactorService
+    private readonly twoFactorService: TwoFactorService,
   ) {}
   async validateVerificationCode({
     email,
@@ -132,6 +134,7 @@ export class AuthService {
   }
 
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
+    // 1. Get user info, check user input=
     const user = await this.authRepository.findUniqueUserIncludeRole({
       email: body.email,
     })
@@ -145,6 +148,31 @@ export class AuthService {
       throw InvalidPasswordException
     }
 
+    // 2. If user enable 2FA, check 2FA TOTP or OTP Code (email)
+    if (user.totpSecret) {
+      if (!body.totpCode && !body.code) {
+        throw InvalidOTPAndCodeException
+      }
+
+      if (body.totpCode) {
+        const isValid = this.twoFactorService.verifyTOTP({
+          email: user.email,
+          secret: user.totpSecret,
+          token: body.totpCode,
+        })
+        if (!isValid) {
+          throw InvalidTOTPException
+        }
+      } else if (body.code) {
+        await this.validateVerificationCode({
+          email: user.email,
+          code: body.code,
+          type: TypeOfVerificationCode.LOGIN,
+        })
+      }
+    }
+
+    // 3. Create device
     const device = await this.authRepository.createDevice({
       userId: user.id,
       userAgent: body.userAgent,
@@ -161,6 +189,7 @@ export class AuthService {
     return tokens
   }
 
+  // 4. Generate access token and refresh token
   async generateTokens({ userId, deviceId, roleId, roleName }: AccessTokenPayloadCreate) {
     const [accessToken, refreshToken] = await Promise.all([
       this.tokenService.signAccessToken({
@@ -276,7 +305,7 @@ export class AuthService {
   async setupTwoFactorAuth(userId: number) {
     // 1. Get user info, check existen of user and 2FA enable or not
     const user = await this.sharedUserRepository.findUnique({
-      id: userId
+      id: userId,
     })
     if (!user) {
       throw EmailNotFoundException
@@ -285,13 +314,13 @@ export class AuthService {
       throw TOTPAlreadyEnaBledException
     }
     // 2. Create secret and uri
-    const {secret,uri} = this.twoFactorService.generateTOTPSecret(user.email)
+    const { secret, uri } = this.twoFactorService.generateTOTPSecret(user.email)
     // 3. Update secret of user in db
-    await this.authRepository.updateUser({id:userId}, {totpSecret:secret})
+    await this.authRepository.updateUser({ id: userId }, { totpSecret: secret })
     // 4. Return secret and uri
     return {
       secret,
-      uri
+      uri,
     }
   }
 }
