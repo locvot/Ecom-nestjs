@@ -57,10 +57,11 @@ export const LoginBodySchema = UserSchema.pick({
   })
   .strict()
   .superRefine(({ totpCode, code }, ctx) => {
-    const message = 'Dont provide 2FA and OTP. Just provide 2FA or OTP'
-    if ((totpCode !== undefined) === (code !== undefined)) {
+    // Nếu mà truyền cùng lúc totpCode và code thì sẽ add issue
+    const message = 'Only provide 2FA or OTP code'
+    if (totpCode !== undefined && code !== undefined) {
       ctx.addIssue({
-        path: ['totopCode'],
+        path: ['totpCode'],
         message,
         code: 'custom',
       })
@@ -71,6 +72,8 @@ export const LoginBodySchema = UserSchema.pick({
       })
     }
   })
+
+
 export const LoginResSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),

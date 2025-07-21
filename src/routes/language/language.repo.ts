@@ -15,4 +15,13 @@ export class LanguageRepo {
       }
     })
   }
+
+  findById(id:string): Promise<LanguageType | null>{
+    return this.prismaService.language.findUnique({
+      where:{
+        id,
+        deletedAt: null
+      }
+    })
+  }
 }
