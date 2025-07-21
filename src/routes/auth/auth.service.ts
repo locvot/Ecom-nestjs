@@ -26,8 +26,10 @@ import {
   InvalidPasswordException,
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
+  TOTPAlreadyEnaBledException,
   UnauthorizedAccessException,
 } from './error.model'
+import { TwoFactorService } from 'src/shared/services/2fa.service'
 
 @Injectable()
 export class AuthService {
@@ -38,6 +40,7 @@ export class AuthService {
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly emailService: EmailService,
     private readonly tokenService: TokenService,
+    private readonly twoFactorService: TwoFactorService
   ) {}
   async validateVerificationCode({
     email,
@@ -55,9 +58,7 @@ export class AuthService {
         type,
       },
     })
-    console.log(verificationCode)
     if (!verificationCode) {
-      console.log(code)
       throw InvalidOTPException
     }
     if (verificationCode.expiresAt < new Date()) {
@@ -269,6 +270,28 @@ export class AuthService {
     ])
     return {
       message: 'Update new password',
+    }
+  }
+
+  async setupTwoFactorAuth(userId: number) {
+    // 1. Get user info, check existen of user and 2FA enable or not
+    const user = await this.sharedUserRepository.findUnique({
+      id: userId
+    })
+    if (!user) {
+      throw EmailNotFoundException
+    }
+    if (user.totpSecret) {
+      throw TOTPAlreadyEnaBledException
+    }
+    // 2. Create secret and uri
+    const {secret,uri} = this.twoFactorService.generateTOTPSecret(user.email)
+    // 3. Update secret of user in db
+    await this.authRepository.updateUser({id:userId}, {totpSecret:secret})
+    // 4. Return secret and uri
+    return {
+      secret,
+      uri
     }
   }
 }
