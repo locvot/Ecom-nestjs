@@ -32,7 +32,7 @@ import {
   TOTPAlreadyEnaBledException,
   TOTPNotEnabledException,
   UnauthorizedAccessException,
-} from './error.model'
+} from './auth.error.model'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
 
 @Injectable()
@@ -328,7 +328,7 @@ export class AuthService {
 
   async disableTwoFactorAuth(data: DisableTwoFactorBodyType & { userId: number }) {
     const { userId, totpCode, code } = data
-    // 1. Lấy thông tin user, kiểm tra xem user có tồn tại hay không, và xem họ đã bật 2FA chưa
+    // 1. Check user info
     const user = await this.sharedUserRepository.findUnique({ id: userId })
     if (!user) {
       throw EmailNotFoundException
@@ -337,7 +337,7 @@ export class AuthService {
       throw TOTPNotEnabledException
     }
 
-    // 2. Kiểm tra mã TOTP có hợp lệ hay không
+    // 2. Verify Totp
     if (totpCode) {
       const isValid = this.twoFactorService.verifyTOTP({
         email: user.email,
@@ -348,7 +348,7 @@ export class AuthService {
         throw InvalidTOTPException
       }
     } else if (code) {
-      // 3. Kiểm tra mã OTP email có hợp lệ hay không
+      // 3. Verify OTP email
       await this.validateVerificationCode({
         email: user.email,
         code,
@@ -356,10 +356,8 @@ export class AuthService {
       })
     }
 
-    // 4. Cập nhật secret thành null
+    // 4. Update secret value to null
     await this.authRepository.updateUser({ id: userId }, { totpSecret: null })
-
-    // 5. Trả về thông báo
     return {
       message: 'Tắt 2FA thành công',
     }
