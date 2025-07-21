@@ -12,6 +12,7 @@ import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
 import { EmailService } from 'src/shared/services/email.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { AccessTokenPayloadCreate } from 'src/shared/types/jwt.type'
+import { EmailAlreadyExistsException, EmailNotFoundException, FailedToSendOTPException, InvalidOTPException, InvalidPasswordException, OTPExpiredException, RefreshTokenAlreadyUsedException, UnauthorizedAccessException } from './error.model'
 
 @Injectable()
 export class AuthService {
@@ -31,20 +32,10 @@ export class AuthService {
         type: TypeOfVerificationCode.REGISTER,
       })
       if (!verificaionCode) {
-        throw new UnprocessableEntityException([
-          {
-            message: 'OTP not valid',
-            path: 'code',
-          },
-        ])
+        throw InvalidOTPException
       }
       if (verificaionCode.expiresAt < new Date()) {
-        throw new UnprocessableEntityException([
-          {
-            message: 'OTP expired',
-            path: 'code',
-          },
-        ])
+        throw OTPExpiredException
       }
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(body.password)
@@ -57,12 +48,7 @@ export class AuthService {
       })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw new UnprocessableEntityException([
-          {
-            message: 'Email has existed',
-            path: 'email',
-          },
-        ])
+        throw EmailAlreadyExistsException
       }
       throw error
     }
@@ -73,12 +59,7 @@ export class AuthService {
       email: body.email,
     })
     if (user) {
-      throw new UnprocessableEntityException([
-        {
-          message: 'Email đã tồn tại',
-          path: 'email',
-        },
-      ])
+      throw EmailAlreadyExistsException
     }
     const code = generateOTP()
     const verificationCode = this.authRepository.createVerificationCode({
@@ -92,12 +73,7 @@ export class AuthService {
       code,
     })
     if (error) {
-      throw new UnprocessableEntityException([
-        {
-          message: 'Send OTP failed',
-          path: 'code',
-        },
-      ])
+      throw FailedToSendOTPException
     }
     return { message: 'Send OTP successfully' }
   }
@@ -108,22 +84,12 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new UnprocessableEntityException([
-        {
-          message: 'Email does not exist',
-          path: 'email',
-        },
-      ])
+      throw EmailNotFoundException
     }
 
     const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
     if (!isPasswordMatch) {
-      throw new UnprocessableEntityException([
-        {
-          field: 'password',
-          error: 'Password is incorrect',
-        },
-      ])
+      throw InvalidPasswordException
     }
 
     const device = await this.authRepository.createDevice({
@@ -173,7 +139,7 @@ export class AuthService {
         token: refreshToken,
       })
       if (!refreshTokenInDb) {
-        throw new UnauthorizedException('Refresh Token has been used')
+        throw RefreshTokenAlreadyUsedException
       }
       // 3. Update device
       const {
@@ -196,7 +162,7 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error
       }
-      throw new UnauthorizedException()
+      throw UnauthorizedAccessException
     }
   }
 
@@ -213,12 +179,12 @@ export class AuthService {
       })
       return { message: 'Logout successfully' }
     } catch (error) {
-      // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-      // refresh token của họ đã bị đánh cắp
+      // If the token has been refreshed, notify the user
+      // their refresh token has been stolen
       if (isNotFoundPrismaError(error)) {
-        throw new UnauthorizedException('Refresh token has been used')
+        throw RefreshTokenAlreadyUsedException
       }
-      throw new UnauthorizedException()
+      throw UnauthorizedAccessException
     }
   }
 }
