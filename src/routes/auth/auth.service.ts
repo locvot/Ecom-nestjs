@@ -32,7 +32,7 @@ import {
   TOTPAlreadyEnaBledException,
   TOTPNotEnabledException,
   UnauthorizedAccessException,
-} from './auth.error.model'
+} from './auth.error'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
 
 @Injectable()
