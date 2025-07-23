@@ -11,7 +11,7 @@ import { LanguageService } from './language.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 
-@Controller('language')
+@Controller('languages')
 export class LanguageController {
   constructor(private readonly languageService: LanguageService) {}
 
@@ -27,7 +27,7 @@ export class LanguageController {
     return this.languageService.findById(params.languageId)
   }
 
-  @Post('languages')
+  @Post('')
   @ZodSerializerDto(GetLanguageDetailResDTO)
   create(@Body() body: CreateLanguageBodyDTO, @ActiveUser('userId') userId: number) {
     return this.languageService.create({
