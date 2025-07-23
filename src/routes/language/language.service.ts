@@ -48,4 +48,19 @@ export class LanguageService {
       throw error
     }
   }
+
+  async delete(id: string) {
+    try {
+      // hard delete
+      await this.languageRepo.delete(id, true)
+      return {
+        message: 'Delete successfully',
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      throw error
+    }
+  }
 }

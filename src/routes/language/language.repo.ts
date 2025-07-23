@@ -52,4 +52,22 @@ export class LanguageRepo {
       },
     })
   }
+
+  delete(id: string, isHard?: boolean): Promise<LanguageType> {
+    return isHard
+      ? this.prismaService.language.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.language.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+          },
+        })
+  }
 }
