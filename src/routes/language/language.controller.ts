@@ -1,13 +1,17 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ZodSerializerDto } from 'nestjs-zod';
-import { GetLanguageDetailResDTO, GetLanguageParamsDTO, GetLanguagesResDTO } from './language.dto';
-import { LanguageService } from './language.service';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common'
+import { ZodSerializerDto } from 'nestjs-zod'
+import {
+  CreateLanguageBodyDTO,
+  GetLanguageDetailResDTO,
+  GetLanguageParamsDTO,
+  GetLanguagesResDTO,
+} from './language.dto'
+import { LanguageService } from './language.service'
+import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 
 @Controller('language')
 export class LanguageController {
-  constructor(
-    private readonly languageService: LanguageService
-  ) {}
+  constructor(private readonly languageService: LanguageService) {}
 
   @Get()
   @ZodSerializerDto(GetLanguagesResDTO)
@@ -19,5 +23,14 @@ export class LanguageController {
   @ZodSerializerDto(GetLanguageDetailResDTO)
   findById(@Param() params: GetLanguageParamsDTO) {
     return this.languageService.findById(params.languageId)
+  }
+
+  @Post('language')
+  @ZodSerializerDto(GetLanguageDetailResDTO)
+  create(@Body() body: CreateLanguageBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.languageService.create({
+      data: body,
+      createdById: userId,
+    })
   }
 }

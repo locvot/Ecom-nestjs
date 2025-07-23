@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { LanguageRepo } from './language.repo';
-import { NotFoundRecordException } from 'src/shared/dtos/error';
+import { Injectable } from '@nestjs/common'
+import { LanguageRepo } from './language.repo'
+import { NotFoundRecordException } from 'src/shared/dtos/error'
+import { CreateLanguageBodyType } from './language.model'
+import { LanguageAlreadyExistsException } from './language.error'
 
 @Injectable()
 export class LanguageService {
@@ -8,14 +10,25 @@ export class LanguageService {
 
   async findAll() {
     const data = await this.languageRepo.findAll()
-    return {data,totalItems: data.length}
+    return { data, totalItems: data.length }
   }
 
-  async findById(id:string) {
+  async findById(id: string) {
     const language = await this.languageRepo.findById(id)
     if (!language) {
       throw NotFoundRecordException
     }
     return language
+  }
+
+  async create({ data, createdById }: { data: CreateLanguageBodyType; createdById: number }) {
+    try {
+      return await this.languageRepo.create({
+        createdById,
+        data,
+      })
+    } catch (error) {
+      throw LanguageAlreadyExistsException
+    }
   }
 }
