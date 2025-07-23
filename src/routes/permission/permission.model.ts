@@ -36,7 +36,7 @@ export const GetPermissionQuerySchema = z
   })
   .strict()
 
-export const GetPermissionParamScehma = z
+export const GetPermissionParamsScehma = z
   .object({
     permissionId: z.coerce.number(),
   })
@@ -50,8 +50,11 @@ export const CreatePermissionBodySchema = PermissionSchema.pick({
 
 export const GetPermissionDetailResSchema = PermissionSchema
 
+export const UpdatePermissionBodySchema = CreatePermissionBodySchema
+
 export type PermissionType = z.infer<typeof PermissionSchema>
 export type GetPermissionResType = z.infer<typeof GetPermissionResSchema>
 export type GetPermissionQueryType = z.infer<typeof GetPermissionQuerySchema>
 export type GetPermissionDetailResType = z.infer<typeof GetPermissionDetailResSchema>
 export type CreatePermissionBodyType = z.infer<typeof CreatePermissionBodySchema>
+export type UpdatePermissionBodyType = z.infer<typeof UpdatePermissionBodySchema>

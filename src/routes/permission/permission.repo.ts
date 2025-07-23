@@ -5,6 +5,7 @@ import {
   GetPermissionQueryType,
   GetPermissionResType,
   PermissionType,
+  UpdatePermissionBodyType,
 } from './permission.model'
 
 @Injectable()
@@ -55,6 +56,27 @@ export class PermissionRepo {
       data: {
         ...data,
         createdById,
+      },
+    })
+  }
+
+  async update({
+    id,
+    updatedById,
+    data,
+  }: {
+    id: number
+    updatedById: number
+    data: UpdatePermissionBodyType
+  }): Promise<PermissionType> {
+    return this.prismaService.permission.update({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      data: {
+        ...data,
+        updatedById,
       },
     })
   }
