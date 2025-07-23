@@ -29,11 +29,22 @@ export const GetPermissionResSchema = z.object({
   totalPages: z.number(),
 })
 
-export const GetPermissionQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().default(10),
-})
+export const GetPermissionQuerySchema = z
+  .object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().default(10),
+  })
+  .strict()
+
+export const GetPermissionParamScehma = z
+  .object({
+    permissionId: z.coerce.number(),
+  })
+  .strict()
+
+export const GetPermissionDetailResSchema = PermissionSchema
 
 export type PermissionType = z.infer<typeof PermissionSchema>
 export type GetPermissionResType = z.infer<typeof GetPermissionResSchema>
 export type GetPermissionQueryType = z.infer<typeof GetPermissionQuerySchema>
+export type GetPermissionDetailResType = z.infer<typeof GetPermissionDetailResSchema>

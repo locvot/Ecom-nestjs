@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { GetPermissionQueryType, GetPermissionResType } from './permission.model'
+import { GetPermissionQueryType, GetPermissionResType, PermissionType } from './permission.model'
 
 @Injectable()
 export class PermissionRepo {
@@ -28,5 +28,14 @@ export class PermissionRepo {
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
     }
+  }
+
+  async findById(id: number): Promise<PermissionType | null> {
+    return this.prismaService.permission.findUnique({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    })
   }
 }
