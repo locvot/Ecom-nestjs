@@ -42,9 +42,16 @@ export const GetPermissionParamScehma = z
   })
   .strict()
 
+export const CreatePermissionBodySchema = PermissionSchema.pick({
+  name: true,
+  path: true,
+  method: true,
+}).strict()
+
 export const GetPermissionDetailResSchema = PermissionSchema
 
 export type PermissionType = z.infer<typeof PermissionSchema>
 export type GetPermissionResType = z.infer<typeof GetPermissionResSchema>
 export type GetPermissionQueryType = z.infer<typeof GetPermissionQuerySchema>
 export type GetPermissionDetailResType = z.infer<typeof GetPermissionDetailResSchema>
+export type CreatePermissionBodyType = z.infer<typeof CreatePermissionBodySchema>

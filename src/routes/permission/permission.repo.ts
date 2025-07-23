@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { GetPermissionQueryType, GetPermissionResType, PermissionType } from './permission.model'
+import {
+  CreatePermissionBodyType,
+  GetPermissionQueryType,
+  GetPermissionResType,
+  PermissionType,
+} from './permission.model'
 
 @Injectable()
 export class PermissionRepo {
@@ -35,6 +40,21 @@ export class PermissionRepo {
       where: {
         id,
         deletedAt: null,
+      },
+    })
+  }
+
+  async create({
+    createdById,
+    data,
+  }: {
+    createdById: number | null
+    data: CreatePermissionBodyType
+  }): Promise<PermissionType> {
+    return this.prismaService.permission.create({
+      data: {
+        ...data,
+        createdById,
       },
     })
   }

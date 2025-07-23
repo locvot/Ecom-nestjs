@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { PermissionRepo } from './permission.repo'
-import { GetPermissionQueryType } from './permission.model'
+import { CreatePermissionBodyType, GetPermissionQueryType } from './permission.model'
 import { NotFoundRecordException } from 'src/shared/dtos/error'
+import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { PermissionAlreadyExistsException } from './permission.error'
 
 @Injectable()
 export class PermissionService {
@@ -17,5 +19,19 @@ export class PermissionService {
       throw NotFoundRecordException
     }
     return permission
+  }
+
+  async create({ data, createdById }: { data: CreatePermissionBodyType; createdById: number }) {
+    try {
+      return await this.permissionRepo.create({
+        createdById,
+        data,
+      })
+    } catch (error) {
+      if (!isUniqueConstraintPrismaError(error)) {
+        throw PermissionAlreadyExistsException
+      }
+      throw error
+    }
   }
 }
