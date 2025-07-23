@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { PermissionService } from './permission.service'
 import {
   CreatePermissionBodyDTO,
@@ -10,6 +10,7 @@ import {
 } from './permission.dto'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
+import { MessageResDTO } from 'src/shared/dtos/response.dto'
 
 @Controller('permissions')
 export class PermissionController {
@@ -50,6 +51,15 @@ export class PermissionController {
       data: body,
       id: params.permissionId,
       updatedById: userId,
+    })
+  }
+
+  @Delete('permissionId')
+  @ZodSerializerDto(MessageResDTO)
+  delete(@Param() params: GetPermissionParamsDTO, @ActiveUser('userId') userId: number) {
+    return this.permissionService.delete({
+      id: params.permissionId,
+      deletedById: userId,
     })
   }
 }

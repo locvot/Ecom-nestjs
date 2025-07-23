@@ -80,4 +80,32 @@ export class PermissionRepo {
       },
     })
   }
+
+  async delete(
+    {
+      id,
+      deletedById,
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean,
+  ): Promise<PermissionType> {
+    return isHard
+      ? this.prismaService.permission.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.permission.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById,
+          },
+        })
+  }
 }

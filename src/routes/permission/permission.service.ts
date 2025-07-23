@@ -52,4 +52,18 @@ export class PermissionService {
       throw error
     }
   }
+
+  async delete({ id, deletedById }: { id: number; deletedById: number }) {
+    try {
+      await this.permissionRepo.delete({
+        id,
+        deletedById,
+      })
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      throw error
+    }
+  }
 }
