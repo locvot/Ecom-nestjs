@@ -8,6 +8,7 @@ import {
   RoleWithPermissionsType,
   UpdateRoleBodyType,
 } from './role.model'
+import { number } from 'zod'
 
 @Injectable()
 export class RoleRepo {
@@ -87,5 +88,24 @@ export class RoleRepo {
         permissions: true,
       },
     })
+  }
+
+  async delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<RoleType> {
+    return isHard
+      ? this.prismaService.role.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.role.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById,
+          },
+        })
   }
 }

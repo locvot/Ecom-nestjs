@@ -55,4 +55,21 @@ export class RoleService {
       throw error
     }
   }
+
+  async delete({ id, deletedById }: { id: number; deletedById: number }) {
+    try {
+      await this.roleRepo.delete({
+        id,
+        deletedById,
+      })
+      return {
+        message: 'Delete successfully',
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      throw error
+    }
+  }
 }

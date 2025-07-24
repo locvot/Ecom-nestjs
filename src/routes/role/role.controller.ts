@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { RoleService } from './role.service'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
@@ -11,6 +11,7 @@ import {
   UpdateRoleBodyDTO,
 } from './role.dto'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
+import { MessageResDTO } from 'src/shared/dtos/response.dto'
 
 @Controller('role')
 export class RoleController {
@@ -47,6 +48,15 @@ export class RoleController {
       data: body,
       id: params.roleId,
       updatedById: userId,
+    })
+  }
+
+  @Delete()
+  @ZodSerializerDto(MessageResDTO)
+  delete(@Param() params: GetRoleParamsDTO, @ActiveUser('userId') userId: number) {
+    return this.roleService.delete({
+      id: params.roleId,
+      deletedById: userId,
     })
   }
 }
