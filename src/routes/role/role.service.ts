@@ -3,7 +3,8 @@ import { RoleRepo } from './role.repo'
 import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from './role.model'
 import { NotFoundRecordException } from 'src/shared/dtos/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { RoleAlreadyExistsException } from './role.error'
+import { ProhibitedActionOnBaseRoleException, RoleAlreadyExistsException } from './role.error'
+import { RoleName } from 'src/shared/constants/role.constant'
 
 @Injectable()
 export class RoleService {
@@ -39,12 +40,21 @@ export class RoleService {
 
   async update({ id, data, updatedById }: { id: number; data: UpdateRoleBodyType; updatedById: number }) {
     try {
-      const role = await this.roleRepo.update({
+      const role = await this.roleRepo.findById(id)
+      if (!role) {
+        throw NotFoundRecordException
+      }
+      // Do not allow anyone to delete basic role
+      if (role.name === RoleName.Admin) {
+        throw ProhibitedActionOnBaseRoleException
+      }
+
+      const updatedRole = await this.roleRepo.update({
         id,
         data,
         updatedById,
       })
-      return role
+      return updatedRole
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException
@@ -61,6 +71,16 @@ export class RoleService {
 
   async delete({ id, deletedById }: { id: number; deletedById: number }) {
     try {
+      const role = await this.roleRepo.findById(id)
+      if (!role) {
+        throw NotFoundRecordException
+      }
+      // Do not allow anyone to delete basic role
+      const baseRoles: string[] = [RoleName.Admin, RoleName.Client, RoleName.Seller]
+      if (baseRoles.includes(role.name)) {
+        throw ProhibitedActionOnBaseRoleException
+      }
+
       await this.roleRepo.delete({
         id,
         deletedById,
