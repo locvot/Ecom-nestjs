@@ -1,7 +1,15 @@
-import { Controller, Get, Param, Query } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common'
 import { RoleService } from './role.service'
 import { ZodSerializerDto } from 'nestjs-zod'
-import { GetRoleDetailResDTO, GetRoleParamsDTO, GetRolesQueryDTO, GetRolesResDTO } from './role.dto'
+import {
+  CreateRoleBodyDTO,
+  CreateRoleResDTO,
+  GetRoleDetailResDTO,
+  GetRoleParamsDTO,
+  GetRolesQueryDTO,
+  GetRolesResDTO,
+} from './role.dto'
+import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 
 @Controller('role')
 export class RoleController {
@@ -20,5 +28,14 @@ export class RoleController {
   @ZodSerializerDto(GetRoleDetailResDTO)
   findById(@Param() params: GetRoleParamsDTO) {
     return this.roleService.findById(params.roleId)
+  }
+
+  @Post()
+  @ZodSerializerDto(CreateRoleResDTO)
+  create(@Body() body: CreateRoleBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.roleService.create({
+      data: body,
+      createdById: userId,
+    })
   }
 }

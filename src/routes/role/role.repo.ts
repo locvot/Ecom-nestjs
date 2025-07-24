@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { GetRolesQueryType, GetRolesResType, RoleWithPermissionsType } from './role.model'
+import { CreateRoleBodyType, GetRolesQueryType, GetRolesResType, RoleType, RoleWithPermissionsType } from './role.model'
 
 @Injectable()
 export class RoleRepo {
@@ -40,6 +40,15 @@ export class RoleRepo {
       },
       include: {
         permissions: true,
+      },
+    })
+  }
+
+  async create({ createdById, data }: { createdById: number | null; data: CreateRoleBodyType }): Promise<RoleType> {
+    return this.prismaService.role.create({
+      data: {
+        ...data,
+        createdById,
       },
     })
   }
