@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { RoleRepo } from './role.repo'
-import { CreateRoleBodyType, GetRolesQueryType } from './role.model'
+import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from './role.model'
 import { NotFoundRecordException } from 'src/shared/dtos/error'
-import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { RoleAlreadyExistsException } from './role.error'
 
 @Injectable()
@@ -30,6 +30,25 @@ export class RoleService {
       })
       return role
     } catch (error) {
+      if (isUniqueConstraintPrismaError(error)) {
+        throw RoleAlreadyExistsException
+      }
+      throw error
+    }
+  }
+
+  async update({ id, data, updatedById }: { id: number; data: UpdateRoleBodyType; updatedById: number }) {
+    try {
+      const role = await this.roleRepo.update({
+        id,
+        data,
+        updatedById,
+      })
+      return role
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
       if (isUniqueConstraintPrismaError(error)) {
         throw RoleAlreadyExistsException
       }

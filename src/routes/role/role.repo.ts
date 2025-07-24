@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { CreateRoleBodyType, GetRolesQueryType, GetRolesResType, RoleType, RoleWithPermissionsType } from './role.model'
+import {
+  CreateRoleBodyType,
+  GetRolesQueryType,
+  GetRolesResType,
+  RoleType,
+  RoleWithPermissionsType,
+  UpdateRoleBodyType,
+} from './role.model'
 
 @Injectable()
 export class RoleRepo {
@@ -49,6 +56,35 @@ export class RoleRepo {
       data: {
         ...data,
         createdById,
+      },
+    })
+  }
+
+  async update({
+    id,
+    updatedById,
+    data,
+  }: {
+    id: number
+    updatedById: number
+    data: UpdateRoleBodyType
+  }): Promise<RoleType> {
+    return this.prismaService.role.update({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      data: {
+        name: data.name,
+        description: data.description,
+        isActive: data.isActive,
+        permissions: {
+          set: data.permissionIds.map((id) => ({ id })),
+        },
+        updatedById,
+      },
+      include: {
+        permissions: true,
       },
     })
   }
