@@ -1,7 +1,7 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Param, Query } from '@nestjs/common'
 import { RoleService } from './role.service'
 import { ZodSerializerDto } from 'nestjs-zod'
-import { GetRolesQueryDTO, GetRolesResDTO } from './role.dto'
+import { GetRoleDetailResDTO, GetRoleParamsDTO, GetRolesQueryDTO, GetRolesResDTO } from './role.dto'
 
 @Controller('role')
 export class RoleController {
@@ -14,5 +14,11 @@ export class RoleController {
       page: query.page,
       limit: query.limit,
     })
+  }
+
+  @Get(':roleId')
+  @ZodSerializerDto(GetRoleDetailResDTO)
+  findById(@Param() params: GetRoleParamsDTO) {
+    return this.roleService.findById(params.roleId)
   }
 }

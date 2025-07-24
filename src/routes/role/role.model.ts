@@ -1,5 +1,10 @@
 import { z } from 'zod'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
+import { PermissionSchema } from 'src/shared/models/shared-permission.model'
+
+export const RoleWithPermissionsSchema = RoleSchema.extend({
+  permissions: z.array(PermissionSchema),
+})
 
 export const GetRolesResSchema = z.object({
   data: z.array(RoleSchema),
@@ -16,5 +21,16 @@ export const GetRolesQuerySchema = z
   })
   .strict()
 
+export const GetRoleParamsSchema = z
+  .object({
+    roleId: z.coerce.number(),
+  })
+  .strict()
+
+export const GetRoleDetailResSchema = RoleWithPermissionsSchema
+
 export type GetRolesResType = z.infer<typeof GetRolesResSchema>
 export type GetRolesQueryType = z.infer<typeof GetRolesQuerySchema>
+export type GetRoleDetailResType = z.infer<typeof GetRoleDetailResSchema>
+export type GetRoleParamsType = z.infer<typeof GetRoleParamsSchema>
+export type RoleWithPermissionsType = z.infer<typeof RoleWithPermissionsSchema>
