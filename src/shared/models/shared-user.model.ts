@@ -40,5 +40,11 @@ export const GetUserProfileResSchema = UserSchema.omit({
   }),
 })
 
+export const UpdateProfileResSchema = UserSchema.omit({
+  password: true,
+  totpSecret: true,
+})
+
 export type UserType = z.infer<typeof UserSchema>
 export type GetUserProfileResType = z.infer<typeof GetUserProfileResSchema>
+export type UpdateProfileResType = z.infer<typeof UpdateProfileResSchema>

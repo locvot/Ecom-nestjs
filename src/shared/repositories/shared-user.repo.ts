@@ -34,4 +34,11 @@ export class SharedUserRepository {
       },
     })
   }
+
+  update(where: WhereUniqueUserType, data: Partial<UserType>): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where,
+      data,
+    })
+  }
 }
