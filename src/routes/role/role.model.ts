@@ -54,5 +54,4 @@ export type GetRoleParamsType = z.infer<typeof GetRoleParamsSchema>
 export type RoleWithPermissionsType = z.infer<typeof RoleWithPermissionsSchema>
 export type CreateRoleBodyType = z.infer<typeof CreateRoleBodySchema>
 export type CreateRoleResType = z.infer<typeof CreateRoleResSchema>
-export type RoleType = z.infer<typeof RoleSchema>
 export type UpdateRoleBodyType = z.infer<typeof UpdateRoleBodySchema>
