@@ -6,13 +6,13 @@ import { PermissionType } from '../models/shared-permission.model'
 
 type UserIncludeRolePermissionsType = UserType & { role: RoleType & { permissions: PermissionType[] } }
 
-type WhereUniqueUserType = { id: number; [key: string]: any } | { email: string; [key: string]: any }
+export type WhereUniqueUserType = { id: number; [key: string]: any } | { email: string; [key: string]: any }
 
 @Injectable()
 export class SharedUserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findUnique(WhereUniqueUserType): Promise<UserType | null> {
+  findUnique(WhereUniqueUserType): Promise<UserType | null> {
     return this.prismaService.user.findUnique({
       where: WhereUniqueUserType,
     })
