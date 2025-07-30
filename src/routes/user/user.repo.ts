@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { GetUsersQueryType, GetUsersResType } from './user.model'
+import { CreateUserBodyType, GetUsersQueryType, GetUsersResType } from './user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { UserType } from 'src/shared/models/shared-user.model'
 
 @Injectable()
 export class UserRepo {
@@ -33,5 +34,14 @@ export class UserRepo {
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
     }
+  }
+
+  create({ createdById, data }: { createdById: number | null; data: CreateUserBodyType }): Promise<UserType> {
+    return this.prismaService.user.create({
+      data: {
+        ...data,
+        createdById,
+      },
+    })
   }
 }

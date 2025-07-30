@@ -1,8 +1,21 @@
 import { createZodDto } from 'nestjs-zod'
-import { GetUserParamsSchema, GetUsersQuerySchema, GetUsersResSchema } from './user.model'
+import {
+  CreateUserBodySchema,
+  GetUserParamsSchema,
+  GetUsersQuerySchema,
+  GetUsersResSchema,
+  UpdateUserBodySchema,
+} from './user.model'
+import { UpdateProfileResDTO } from 'src/shared/dtos/shared-user.dto'
 
 export class GetUsersResDTO extends createZodDto(GetUsersResSchema) {}
 
 export class GetUsersQueryDTO extends createZodDto(GetUsersQuerySchema) {}
 
 export class GetUsersParamsDTO extends createZodDto(GetUserParamsSchema) {}
+
+export class CreateUserBodyDTO extends createZodDto(CreateUserBodySchema) {}
+
+export class UpdateUserBodyDTO extends createZodDto(UpdateUserBodySchema) {}
+
+export class CreateUserResDTO extends UpdateProfileResDTO {}
