@@ -1,7 +1,8 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Param, Query } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ZodSerializerDto } from 'nestjs-zod'
-import { GetUsersQueryDTO, GetUsersResDTO } from './user.dto'
+import { GetUsersParamsDTO, GetUsersQueryDTO, GetUsersResDTO } from './user.dto'
+import { GetUserProfileResDTO } from 'src/shared/dtos/shared-user.dto'
 
 @Controller('user')
 export class UserController {
@@ -14,5 +15,11 @@ export class UserController {
       page: query.page,
       limit: query.limit,
     })
+  }
+
+  @Get(':userId')
+  @ZodSerializerDto(GetUserProfileResDTO)
+  findById(@Param() params: GetUsersParamsDTO) {
+    return this.userService.findById(params.userId)
   }
 }

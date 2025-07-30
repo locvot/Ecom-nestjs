@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PermissionRepo } from './permission.repo'
 import { CreatePermissionBodyType, GetPermissionQueryType, UpdatePermissionBodyType } from './permission.model'
-import { NotFoundRecordException } from 'src/shared/dtos/error'
+import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { PermissionAlreadyExistsException } from './permission.error'
 

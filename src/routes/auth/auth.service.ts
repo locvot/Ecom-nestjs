@@ -33,7 +33,7 @@ import {
   UnauthorizedAccessException,
 } from './auth.error'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
-import { InvalidPasswordException } from 'src/shared/dtos/error'
+import { InvalidPasswordException } from 'src/shared/error'
 
 @Injectable()
 export class AuthService {

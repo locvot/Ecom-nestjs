@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { RoleRepo } from './role.repo'
 import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from './role.model'
-import { NotFoundRecordException } from 'src/shared/dtos/error'
+import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { ProhibitedActionOnBaseRoleException, RoleAlreadyExistsException } from './role.error'
 import { RoleName } from 'src/shared/constants/role.constant'

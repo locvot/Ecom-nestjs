@@ -24,5 +24,12 @@ export const GetUsersQuerySchema = z
   })
   .strict()
 
+export const GetUserParamsSchema = z
+  .object({
+    userId: z.coerce.number().int().positive(),
+  })
+  .strict()
+
 export type GetUsersResType = z.infer<typeof GetUsersResSchema>
 export type GetUsersQueryType = z.infer<typeof GetUsersQuerySchema>
+export type GetUserParamsType = z.infer<typeof GetUserParamsSchema>
