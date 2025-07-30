@@ -12,7 +12,7 @@ export class GetUsersResDTO extends createZodDto(GetUsersResSchema) {}
 
 export class GetUsersQueryDTO extends createZodDto(GetUsersQuerySchema) {}
 
-export class GetUsersParamsDTO extends createZodDto(GetUserParamsSchema) {}
+export class GetUserParamsDTO extends createZodDto(GetUserParamsSchema) {}
 
 export class CreateUserBodyDTO extends createZodDto(CreateUserBodySchema) {}
 

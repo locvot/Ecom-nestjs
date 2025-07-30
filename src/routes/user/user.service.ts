@@ -1,13 +1,17 @@
 import { ForbiddenException, Injectable } from '@nestjs/common'
-import { CreateUserBodyType, GetUsersQueryType } from './user.model'
+import { CreateUserBodyType, GetUsersQueryType, UpdateUserBodyType } from './user.model'
 import { UserRepo } from './user.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { NotFoundRecordException } from 'src/shared/error'
 import { RoleName } from 'src/shared/constants/role.constant'
 import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
 import { HashingService } from 'src/shared/services/hashing.service'
-import { isForeignKeyConstraintPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { RoleNotFoundException, UserAlreadyExistsException } from './user.error'
+import {
+  isForeignKeyConstraintPrismaError,
+  isNotFoundPrismaError,
+  isUniqueConstraintPrismaError,
+} from 'src/shared/helpers'
+import { CannotUpdateOrDeleteYourselfException, RoleNotFoundException, UserAlreadyExistsException } from './user.error'
 
 @Injectable()
 export class UserService {
@@ -31,6 +35,23 @@ export class UserService {
       }
       return true
     }
+  }
+
+  private verifyYourself({ userAgentId, userTargetId }: { userAgentId: number; userTargetId: number }) {
+    if (userAgentId === userTargetId) {
+      throw CannotUpdateOrDeleteYourselfException
+    }
+  }
+
+  private async getRoleIdByUserId(userId: number) {
+    const currentUser = await this.sharedUserRepository.findUnique({
+      id: userId,
+      deletedAt: null,
+    })
+    if (!currentUser) {
+      throw NotFoundRecordException
+    }
+    return currentUser.roleId
   }
 
   list(pagination: GetUsersQueryType) {
@@ -78,6 +99,54 @@ export class UserService {
 
       if (isUniqueConstraintPrismaError(error)) {
         throw UserAlreadyExistsException
+      }
+      throw error
+    }
+  }
+
+  async update({
+    id,
+    data,
+    updatedById,
+    updatedByRoleName,
+  }: {
+    id: number
+    data: UpdateUserBodyType
+    updatedById: number
+    updatedByRoleName: string
+  }) {
+    try {
+      // Cant update yourself role
+      this.verifyYourself({
+        userAgentId: updatedById,
+        userTargetId: id,
+      })
+
+      // Get the original roleId of the updated person to check if the updated person has the right to update
+      // Do not use data.roleId because this data can be intentionally passed incorrectly.
+      const roleIdTarget = await this.getRoleIdByUserId(id)
+      await this.verifyRole({
+        roleNameAgent: updatedByRoleName,
+        roleIdTarget,
+      })
+
+      const updatedUser = await this.sharedUserRepository.update(
+        { id, deletedAt: null },
+        {
+          ...data,
+          updatedById,
+        },
+      )
+      return updatedUser
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      if (isUniqueConstraintPrismaError(error)) {
+        throw UserAlreadyExistsException
+      }
+      if (isForeignKeyConstraintPrismaError(error)) {
+        throw RoleNotFoundException
       }
       throw error
     }

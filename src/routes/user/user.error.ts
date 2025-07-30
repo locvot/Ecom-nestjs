@@ -1,4 +1,4 @@
-import { UnprocessableEntityException } from '@nestjs/common'
+import { ForbiddenException, UnprocessableEntityException } from '@nestjs/common'
 
 export const UserAlreadyExistsException = new UnprocessableEntityException([
   {
@@ -13,3 +13,5 @@ export const RoleNotFoundException = new UnprocessableEntityException([
     path: 'roleId',
   },
 ])
+
+export const CannotUpdateOrDeleteYourselfException = new ForbiddenException('Error.CannotUpdateOrDeleteYourself')

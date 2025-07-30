@@ -1,8 +1,15 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ZodSerializerDto } from 'nestjs-zod'
-import { CreateUserBodyDTO, CreateUserResDTO, GetUsersParamsDTO, GetUsersQueryDTO, GetUsersResDTO } from './user.dto'
-import { GetUserProfileResDTO } from 'src/shared/dtos/shared-user.dto'
+import {
+  CreateUserBodyDTO,
+  CreateUserResDTO,
+  GetUserParamsDTO,
+  GetUsersQueryDTO,
+  GetUsersResDTO,
+  UpdateUserBodyDTO,
+} from './user.dto'
+import { GetUserProfileResDTO, UpdateProfileResDTO } from 'src/shared/dtos/shared-user.dto'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { ActiveRolePermissions } from 'src/shared/decorators/active-role-permissions.decorator'
 
@@ -21,7 +28,7 @@ export class UserController {
 
   @Get(':userId')
   @ZodSerializerDto(GetUserProfileResDTO)
-  findById(@Param() params: GetUsersParamsDTO) {
+  findById(@Param() params: GetUserParamsDTO) {
     return this.userService.findById(params.userId)
   }
 
@@ -36,6 +43,22 @@ export class UserController {
       data: body,
       createdById: userId,
       createdByRoleName: roleName,
+    })
+  }
+
+  @Put(':userId')
+  @ZodSerializerDto(UpdateProfileResDTO)
+  update(
+    @Body() body: UpdateUserBodyDTO,
+    @Param() params: GetUserParamsDTO,
+    @ActiveUser('userId') userId: number,
+    @ActiveRolePermissions('name') roleName: string,
+  ) {
+    return this.userService.update({
+      data: body,
+      id: params.userId,
+      updatedById: userId,
+      updatedByRoleName: roleName,
     })
   }
 }
