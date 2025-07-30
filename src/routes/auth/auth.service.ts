@@ -109,7 +109,6 @@ export class AuthService {
     // 1. Find user in db
     const user = await this.sharedUserRepository.findUnique({
       email: body.email,
-      deletedAt: null,
     })
     if (body.type === TypeOfVerificationCode.REGISTER && user) {
       throw EmailAlreadyExistsException
@@ -140,7 +139,6 @@ export class AuthService {
     // 1. Get user info, check user input=
     const user = await this.authRepository.findUniqueUserIncludeRole({
       email: body.email,
-      deletedAt: null,
     })
 
     if (!user) {
@@ -279,7 +277,6 @@ export class AuthService {
     // 1. Verify email if it is in db
     const user = await this.sharedUserRepository.findUnique({
       email,
-      deletedAt: null,
     })
     if (!user) {
       throw EmailNotFoundException
@@ -293,10 +290,7 @@ export class AuthService {
     // 3. Update new password and remove OTP
     const hashedPassword = await this.hashingService.hash(newPassword)
     await Promise.all([
-      this.sharedUserRepository.update(
-        { id: user.id, deletedAt: null },
-        { password: hashedPassword, updatedById: user.id },
-      ),
+      this.sharedUserRepository.update({ id: user.id }, { password: hashedPassword, updatedById: user.id }),
       this.authRepository.deleteVerificationCode({
         email_code_type: {
           email: body.email,
@@ -314,7 +308,6 @@ export class AuthService {
     // 1. Get user info, check existen of user and 2FA enable or not
     const user = await this.sharedUserRepository.findUnique({
       id: userId,
-      deletedAt: null,
     })
     if (!user) {
       throw EmailNotFoundException
@@ -325,7 +318,7 @@ export class AuthService {
     // 2. Create secret and uri
     const { secret, uri } = this.twoFactorService.generateTOTPSecret(user.email)
     // 3. Update secret of user in db
-    await this.sharedUserRepository.update({ id: userId, deletedAt: null }, { totpSecret: secret })
+    await this.sharedUserRepository.update({ id: userId }, { totpSecret: secret })
     // 4. Return secret and uri
     return {
       secret,
@@ -336,7 +329,7 @@ export class AuthService {
   async disableTwoFactorAuth(data: DisableTwoFactorBodyType & { userId: number }) {
     const { userId, totpCode, code } = data
     // 1. Check user info
-    const user = await this.sharedUserRepository.findUnique({ id: userId, deletedAt: null })
+    const user = await this.sharedUserRepository.findUnique({ id: userId })
     if (!user) {
       throw EmailNotFoundException
     }
@@ -364,7 +357,7 @@ export class AuthService {
     }
 
     // 4. Update secret value to null
-    await this.sharedUserRepository.update({ id: userId, deletedAt: null }, { totpSecret: null, updatedById: userId })
+    await this.sharedUserRepository.update({ id: userId }, { totpSecret: null, updatedById: userId })
     return {
       message: 'Tắt 2FA thành công',
     }
