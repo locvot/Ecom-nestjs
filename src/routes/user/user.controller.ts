@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
@@ -12,6 +12,7 @@ import {
 import { GetUserProfileResDTO, UpdateProfileResDTO } from 'src/shared/dtos/shared-user.dto'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { ActiveRolePermissions } from 'src/shared/decorators/active-role-permissions.decorator'
+import { MessageResDTO } from 'src/shared/dtos/response.dto'
 
 @Controller('user')
 export class UserController {
@@ -59,6 +60,20 @@ export class UserController {
       id: params.userId,
       updatedById: userId,
       updatedByRoleName: roleName,
+    })
+  }
+
+  @Delete(':userId')
+  @ZodSerializerDto(MessageResDTO)
+  delete(
+    @Param() params: GetUserParamsDTO,
+    @ActiveUser('userId') userId: number,
+    @ActiveRolePermissions('name') roleName: string,
+  ) {
+    return this.userService.delete({
+      id: params.userId,
+      deletedById: userId,
+      deletedByRolename: roleName,
     })
   }
 }

@@ -151,4 +151,33 @@ export class UserService {
       throw error
     }
   }
+
+  async delete({ id, deletedById, deletedByRolename }: { id: number; deletedById: number; deletedByRolename: string }) {
+    try {
+      this.verifyYourself({
+        userAgentId: deletedById,
+        userTargetId: id,
+      })
+
+      const roleIdTarget = await this.getRoleIdByUserId(id)
+      await this.verifyRole({
+        roleNameAgent: deletedByRolename,
+        roleIdTarget,
+      })
+
+      await this.userRepo.delete({
+        id,
+        deletedById,
+      })
+
+      return {
+        message: 'Delete successfully',
+      }
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw NotFoundRecordException
+      }
+      throw error
+    }
+  }
 }

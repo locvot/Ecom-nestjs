@@ -44,4 +44,13 @@ export class UserRepo {
       },
     })
   }
+
+  delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<UserType> {
+    return isHard
+      ? this.prismaService.user.delete({ where: { id } })
+      : this.prismaService.user.update({
+          where: { id, deletedAt: null },
+          data: { deletedAt: new Date(), deletedById },
+        })
+  }
 }
