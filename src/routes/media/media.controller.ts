@@ -5,7 +5,6 @@ import {
   MaxFileSizeValidator,
   NotFoundException,
   Param,
-  ParseFilePipe,
   Post,
   Res,
   UploadedFiles,
@@ -14,12 +13,15 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { Response } from 'express'
 import path from 'path'
-import envConfig from 'src/shared/config'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { MediaService } from './media.service'
+import { ParseFilePipeWithUnlink } from './parse-file-with-unlink.pipe'
 
 @Controller('media')
 export class MediaController {
+  constructor(private readonly mediaService: MediaService) {}
+
   @Post('images/upload')
   @UseInterceptors(
     FilesInterceptor('files', 100, {
@@ -30,7 +32,7 @@ export class MediaController {
   )
   uploadFile(
     @UploadedFiles(
-      new ParseFilePipe({
+      new ParseFilePipeWithUnlink({
         validators: [
           new MaxFileSizeValidator({ maxSize: 2 * 1042 * 1042 }), // 2MB
           new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/, skipMagicNumbersValidation: true }),
@@ -39,10 +41,10 @@ export class MediaController {
     )
     files: Array<Express.Multer.File>,
   ) {
-    console.log(files)
-    return files.map((file) => ({
-      url: `${envConfig.PREFIX_STATIC_ENDPOINT}/${file.filename}`,
-    }))
+    return this.mediaService.uploadFile(files)
+    // return files.map((file) => ({
+    //   url: `${envConfig.PREFIX_STATIC_ENPOINT}/${file.filename}`,
+    // }))
   }
 
   @Get('static/:filename')
