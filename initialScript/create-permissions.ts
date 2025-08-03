@@ -3,6 +3,8 @@ import { AppModule } from 'src/app.module'
 import { HTTPMethod, RoleName } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
+const SellerModule = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 'PROFILE']
+
 const prisma = new PrismaService()
 
 async function bootstrap() {
@@ -84,24 +86,32 @@ async function bootstrap() {
       deletedAt: null,
     },
   })
-  // Update other permissions in Admin Role
-  const adminRole = await prisma.role.findFirstOrThrow({
+
+  const adminPermissionIds = updatedPermissionsInDb.map((item) => ({ id: item.id }))
+  const sellerPermissionIds = updatedPermissionsInDb
+    .filter((item) => SellerModule.includes(item.module))
+    .map((item) => ({ id: item.id }))
+  await Promise.all([updateRole(adminPermissionIds, RoleName.Admin), updateRole(sellerPermissionIds, RoleName.Seller)])
+  process.exit(0)
+}
+
+const updateRole = async (permissionIds: { id: number }[], roleName: string) => {
+  // Cập nhật lại các permissions trong Admin Role
+  const role = await prisma.role.findFirstOrThrow({
     where: {
-      name: RoleName.Admin,
+      name: roleName,
       deletedAt: null,
     },
   })
   await prisma.role.update({
     where: {
-      id: adminRole.id,
+      id: role.id,
     },
     data: {
       permissions: {
-        set: updatedPermissionsInDb.map((item) => ({ id: item.id })),
+        set: permissionIds,
       },
     },
   })
-
-  process.exit(0)
 }
 bootstrap()
