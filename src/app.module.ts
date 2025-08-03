@@ -18,8 +18,9 @@ import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
 import { CategoryModule } from './routes/category/category.module'
 import { CategoryTranslationModule } from './routes/category/category-translation/category-translation.module'
 import { BrandTranslationModule } from './routes/brand/brand-translation/brand-translation.module'
-import { ProductModule } from './routes/product/product.module';
+import { ProductModule } from './routes/product/product.module'
 import path from 'path'
+import { ProductTranslationModule } from './routes/product/product-translation/product-translation.module'
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import path from 'path'
     CategoryModule,
     CategoryTranslationModule,
     ProductModule,
+    ProductTranslationModule,
   ],
   controllers: [AppController],
   providers: [
