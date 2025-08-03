@@ -3,6 +3,7 @@ import { ProductTranslationSchema } from './product-translation/product-translat
 import { SKUSchema, UpsertSKUBodySchema } from './sku.model'
 import { CategoryIncludeTranslationSchema } from 'src/shared/models/shared-category.model'
 import { BrandIncludeTranslationSchema } from 'src/shared/models/shared-brand.model'
+import { OrderBy, SortBy } from 'src/shared/constants/other.constant'
 
 function generateSKUs(variants: VariantsType) {
   // Hàm hỗ trợ để tạo tất cả tổ hợp
@@ -96,6 +97,8 @@ export const GetProductsQuerySchema = z.object({
   minPrice: z.coerce.number().positive().optional(),
   maxPrice: z.coerce.number().positive().optional(),
   createdById: z.coerce.number().int().positive().optional(),
+  orderBy: z.enum([OrderBy.Asc, OrderBy.Desc]).default(OrderBy.Desc),
+  sortBy: z.enum([SortBy.CreatedAt, SortBy.Price, SortBy.Sale]).default(SortBy.CreatedAt),
 })
 
 /**

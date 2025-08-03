@@ -48,6 +48,8 @@ export class ManageProductService {
       maxPrice: props.query.maxPrice,
       categories: props.query.categories,
       name: props.query.name,
+      orderBy: props.query.orderBy,
+      sortBy: props.query.sortBy,
     })
     return data
   }
