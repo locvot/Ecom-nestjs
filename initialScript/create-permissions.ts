@@ -114,4 +114,5 @@ const updateRole = async (permissionIds: { id: number }[], roleName: string) => 
     },
   })
 }
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap()
