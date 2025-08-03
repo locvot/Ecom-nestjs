@@ -3,7 +3,6 @@ import { ProductTranslationSchema } from './product-translation/product-translat
 import { SKUSchema, UpsertSKUBodySchema } from './sku.model'
 import { CategoryIncludeTranslationSchema } from 'src/shared/models/shared-category.model'
 import { BrandIncludeTranslationSchema } from 'src/shared/models/shared-brand.model'
-import { IsPublic } from 'src/shared/decorators/auth.decorator'
 
 function generateSKUs(variants: VariantsType) {
   // Hàm hỗ trợ để tạo tất cả tổ hợp
@@ -93,7 +92,7 @@ export const GetProductsQuerySchema = z.object({
  * For Admin and Seller
  */
 export const GetManageProductsQuerySchema = GetProductsQuerySchema.extend({
-  IsPublic: z.coerce.boolean().optional(),
+  IsPublic: z.preprocess((value) => value === 'true', z.boolean()).optional(),
   createdById: z.coerce.number().int().positive(),
 })
 
