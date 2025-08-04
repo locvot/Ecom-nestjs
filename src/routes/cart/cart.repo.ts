@@ -4,6 +4,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 import { NotFoundSKUException, OutOfStockSKUException, ProductNotFoundException } from './cart.error'
 import {
   AddToCartBodyType,
+  CartItemDetailType,
   CartItemType,
   DeleteCartBodyType,
   GetCartResType,
@@ -55,35 +56,60 @@ export class CartRepo {
     page: number
     limit: number
   }): Promise<GetCartResType> {
-    const skip = (page - 1) * limit
-    const take = limit
-    const [totalItems, data] = await Promise.all([
-      this.prismaService.cartItem.count({
-        where: { userId },
-      }),
-      this.prismaService.cartItem.findMany({
-        where: { userId },
-        include: {
-          sku: {
-            include: {
-              product: {
-                include: {
-                  productTranslations: {
-                    where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { languageId, deletedAt: null },
-                  },
+    const cartItems = await this.prismaService.cartItem.findMany({
+      where: {
+        userId,
+        sku: {
+          product: {
+            deletedAt: null,
+            publishedAt: {
+              lte: new Date(),
+              not: null,
+            },
+          },
+        },
+      },
+      include: {
+        sku: {
+          include: {
+            product: {
+              include: {
+                productTranslations: {
+                  where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { languageId, deletedAt: null },
                 },
+                createdBy: true,
               },
             },
           },
         },
-        skip,
-        take,
-        orderBy: {
-          createdAt: 'desc',
-        },
-      }),
-    ])
-    return { data, totalItems: data.length, limit, page, totalPages: Math.ceil(totalItems / limit) }
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    })
+
+    const groupMap = new Map<number, CartItemDetailType>()
+    for (const cartItem of cartItems) {
+      const shopId = cartItem.sku.product.createdById
+      if (shopId) {
+        if (!groupMap.has(shopId)) {
+          groupMap.set(shopId, { shop: cartItem.sku.product.createdBy, cartItems: [] })
+        }
+        groupMap.get(shopId)?.cartItems.push(cartItem)
+      }
+    }
+    const sortedGroups = Array.from(groupMap.values())
+    const skip = (page - 1) * limit
+    const take = limit
+    const totalGroups = sortedGroups.length
+    const pagedGroups = sortedGroups.slice(skip, skip + take)
+    return {
+      data: pagedGroups,
+      totalItems: totalGroups,
+      limit,
+      page,
+      totalPages: Math.ceil(totalGroups / limit),
+    }
   }
 
   async create(userId: number, body: AddToCartBodyType): Promise<CartItemType> {
