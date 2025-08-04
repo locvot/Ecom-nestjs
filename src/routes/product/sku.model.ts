@@ -8,5 +8,4 @@ export const UpsertSKUBodySchema = SKUSchema.pick({
   image: true,
 })
 
-export type SKUSchemaType = z.infer<typeof SKUSchema>
 export type UpsertSKUBodyType = z.infer<typeof UpsertSKUBodySchema>

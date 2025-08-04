@@ -1,10 +1,11 @@
 import { z } from 'zod'
 import { ProductTranslationSchema } from './product-translation/product-translation.model'
-import { SKUSchema, UpsertSKUBodySchema } from './sku.model'
+import { UpsertSKUBodySchema } from './sku.model'
 import { CategoryIncludeTranslationSchema } from 'src/shared/models/shared-category.model'
 import { BrandIncludeTranslationSchema } from 'src/shared/models/shared-brand.model'
 import { OrderBy, SortBy } from 'src/shared/constants/other.constant'
 import { ProductSchema, VariantsType } from 'src/shared/models/shared-product.model'
+import { SKUSchema } from 'src/shared/models/shared-sku.model'
 
 function generateSKUs(variants: VariantsType) {
   // Hàm hỗ trợ để tạo tất cả tổ hợp
