@@ -140,6 +140,7 @@ export class ProductRepo {
     const { skus, categories, ...productData } = data
     return this.prismaService.product.create({
       data: {
+        createdById,
         ...productData,
         // Categories are created before
         categories: {
@@ -147,7 +148,10 @@ export class ProductRepo {
         },
         skus: {
           createMany: {
-            data: skus,
+            data: skus.map((sku) => ({
+              ...sku,
+              createdById,
+            })),
           },
         },
       },
