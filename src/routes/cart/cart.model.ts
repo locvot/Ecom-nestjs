@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { ProductTranslationSchema } from '../product/product-translation/product-translation.model'
+
 import { ProductSchema } from 'src/shared/models/shared-product.model'
 import { SKUSchema } from 'src/shared/models/shared-sku.model'
 import { UserSchema } from 'src/shared/models/shared-user.model'
+import { ProductTranslationSchema } from 'src/shared/models/shared-product-translation.model'
 
 export const CartItemSchema = z.object({
   id: z.number(),
