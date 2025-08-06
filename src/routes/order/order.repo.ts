@@ -1,14 +1,24 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { CreateOrderBodyType, CreateOrderResType, GetOrderListQueryType, GetOrderListResType } from './order.model'
+import {
+  CancelOrderResType,
+  CreateOrderBodyType,
+  CreateOrderResType,
+  GetOrderDetailResType,
+  GetOrderListQueryType,
+  GetOrderListResType,
+} from './order.model'
 import { Prisma } from '@prisma/client'
 import {
+  CannotCancelOrderExeception,
   NotFoundCartItemException,
+  OrderNotFoundException,
   OutOfStockSKUException,
   ProductNotFoundException,
   SKUNotBelongToShopException,
 } from './order.error'
 import { OrderStatus } from 'src/shared/constants/order.constant'
+import { isNotFoundPrismaError } from 'src/shared/helpers'
 
 @Injectable()
 export class OrderRepo {
@@ -167,6 +177,55 @@ export class OrderRepo {
     })
     return {
       data: orders,
+    }
+  }
+
+  async detail(userId: number, orderId: number): Promise<GetOrderDetailResType> {
+    const order = await this.prismaService.order.findUnique({
+      where: {
+        id: orderId,
+        userId,
+        deletedAt: null,
+      },
+      include: {
+        items: true,
+      },
+    })
+    if (!order) {
+      throw OrderNotFoundException
+    }
+    return order
+  }
+
+  async cancel(userId: number, orderId: number): Promise<CancelOrderResType> {
+    try {
+      const order = await this.prismaService.order.findUniqueOrThrow({
+        where: {
+          id: userId,
+          userId,
+          deletedAt: null,
+        },
+      })
+      if (order.status !== OrderStatus.PENDING_PAYMENT) {
+        throw CannotCancelOrderExeception
+      }
+      const updateOrder = await this.prismaService.order.update({
+        where: {
+          id: orderId,
+          userId,
+          deletedAt: null,
+        },
+        data: {
+          status: OrderStatus.CANCELLED,
+          updatedById: userId,
+        },
+      })
+      return updateOrder
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw OrderNotFoundException
+      }
+      throw error
     }
   }
 }
