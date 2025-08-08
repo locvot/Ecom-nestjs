@@ -21,12 +21,19 @@ import { BrandTranslationModule } from './routes/brand/brand-translation/brand-t
 import { ProductModule } from './routes/product/product.module'
 import path from 'path'
 import { ProductTranslationModule } from './routes/product/product-translation/product-translation.module'
-import { CartModule } from './routes/cart/cart.module';
-import { OrderModule } from './routes/order/order.module';
-import { PaymentModule } from './routes/payment/payment.module';
+import { CartModule } from './routes/cart/cart.module'
+import { OrderModule } from './routes/order/order.module'
+import { PaymentModule } from './routes/payment/payment.module'
+import { BullModule } from '@nestjs/bullmq'
 
 @Module({
   imports: [
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
