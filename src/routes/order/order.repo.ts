@@ -62,7 +62,10 @@ export class OrderRepo {
     }
   }
 
-  async create(userId: number, body: CreateOrderBodyType) {
+  async create(
+    userId: number,
+    body: CreateOrderBodyType,
+  ): Promise<{ paymentId: number; orders: CreateOrderResType['data'] }> {
     // Check carItemIds in db
     const allBodyCartItemIds = body.map((item) => item.cartItemIds).flat()
     const cartItems = await this.prismaService.cartItem.findMany({
@@ -123,7 +126,7 @@ export class OrderRepo {
     }
 
     // Create order and delete cart item
-    const orders = await this.prismaService.$transaction(async (tx) => {
+    const [paymentId, orders] = await this.prismaService.$transaction(async (tx) => {
       const payment = await tx.payment.create({
         data: {
           status: PaymentStatus.PENDING,
@@ -195,11 +198,12 @@ export class OrderRepo {
         ),
       )
       const [orders] = await Promise.all([orders$, cartItem$, sku$])
-      return orders
+      return [payment.id, orders]
     })
 
     return {
-      data: orders,
+      paymentId,
+      orders,
     }
   }
 
