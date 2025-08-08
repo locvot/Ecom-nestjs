@@ -5,14 +5,10 @@ import { PaymentProducer } from './payment.producer'
 
 @Injectable()
 export class PaymentService {
-  constructor(
-    private readonly paymentRepo: PaymentRepo,
-    private readonly paymentProducer: PaymentProducer,
-  ) {}
+  constructor(private readonly paymentRepo: PaymentRepo) {}
 
   async receiver(body: WebhookPaymentBodyType) {
-    const { paymentId, message } = await this.paymentRepo.receiver(body)
-    await this.paymentProducer.removeJob(paymentId)
-    return { message }
+    const result = await this.paymentRepo.receiver(body)
+    return result
   }
 }

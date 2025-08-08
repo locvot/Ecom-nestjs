@@ -7,10 +7,14 @@ import { parse } from 'date-fns'
 import { PREFIX_PAYMENT_CODE } from 'src/shared/constants/other.constant'
 import { PaymentStatus } from 'src/shared/constants/payment.constant'
 import { OrderStatus } from 'src/shared/constants/order.constant'
+import { PaymentProducer } from './payment.producer'
 
 @Injectable()
 export class PaymentRepo {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly paymentProducer: PaymentProducer,
+  ) {}
 
   private getTotalPrice(orders: OrderIncludeProductSKUSnapshotType[]): number {
     return orders.reduce((total, order) => {
@@ -21,7 +25,7 @@ export class PaymentRepo {
     }, 0)
   }
 
-  async receiver(body: WebhookPaymentBodyType): Promise<MessageResType & { paymentId: number }> {
+  async receiver(body: WebhookPaymentBodyType): Promise<MessageResType> {
     // Add payment detail into db
     let amountIn = 0
     let amountOut = 0
@@ -30,75 +34,86 @@ export class PaymentRepo {
     } else if (body.transferType === 'out') {
       amountOut = body.transferAmount
     }
-    await this.prismaService.paymentTransaction.create({
-      data: {
-        gateway: body.gateway,
-        transactionDate: parse(body.transactionDate, 'yyyy-MM-dd HH:mm:ss', new Date()),
-        accountNumber: body.accountNumber,
-        subAccount: body.subAccount,
-        amountIn,
-        amountOut,
-        accumulated: body.accumulated,
-        code: body.code,
-        transactionContent: body.content,
-        referenceNumber: body.referenceCode,
-        body: body.description,
-      },
-    })
-
-    // Check amount === orders ?
-    // code: 'DH432143124123'
-    const paymentId = body.code
-      ? Number(body.code.split(PREFIX_PAYMENT_CODE)[1])
-      : Number(body.content?.split(PREFIX_PAYMENT_CODE)[1])
-    if (isNaN(paymentId)) {
-      throw new BadRequestException('Cannot get payment id from content')
-    }
-
-    const payment = await this.prismaService.payment.findUnique({
+    const paymentTransaction = await this.prismaService.paymentTransaction.findUnique({
       where: {
-        id: paymentId,
-      },
-      include: {
-        orders: {
-          include: {
-            items: true,
-          },
-        },
+        id: body.id,
       },
     })
-    if (!payment) {
-      throw new BadRequestException(`Cannot find payment with id ${paymentId}`)
+    if (paymentTransaction) {
+      throw new BadRequestException('Transaction already exist')
     }
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.paymentTransaction.create({
+        data: {
+          id: body.id,
+          gateway: body.gateway,
+          transactionDate: parse(body.transactionDate, 'yyyy-MM-dd HH:mm:ss', new Date()),
+          accountNumber: body.accountNumber,
+          subAccount: body.subAccount,
+          amountIn,
+          amountOut,
+          accumulated: body.accumulated,
+          code: body.code,
+          transactionContent: body.content,
+          referenceNumber: body.referenceCode,
+          body: body.description,
+        },
+      })
 
-    const { orders } = payment
-    const totalPrice = this.getTotalPrice(orders)
-    if (totalPrice !== body.transferAmount) {
-      throw new BadRequestException(`Price not match, expected ${totalPrice} but got ${body.transferAmount}`)
-    }
+      // 2. Kiểm tra nội dung chuyển khoản và tổng số tiền có khớp hay không
+      const paymentId = body.code
+        ? Number(body.code.split(PREFIX_PAYMENT_CODE)[1])
+        : Number(body.content?.split(PREFIX_PAYMENT_CODE)[1])
+      if (isNaN(paymentId)) {
+        throw new BadRequestException('Cannot get payment id from content')
+      }
 
-    // Update status order and payment
-    await this.prismaService.$transaction([
-      this.prismaService.payment.update({
+      const payment = await tx.payment.findUnique({
         where: {
           id: paymentId,
         },
-        data: {
-          status: PaymentStatus.SUCCESS,
-        },
-      }),
-      this.prismaService.order.updateMany({
-        where: {
-          id: {
-            in: orders.map((order) => order.id),
+        include: {
+          orders: {
+            include: {
+              items: true,
+            },
           },
         },
-        data: {
-          status: OrderStatus.PENDING_PICKUP,
-        },
-      }),
-    ])
+      })
+      if (!payment) {
+        throw new BadRequestException(`Cannot find payment with id ${paymentId}`)
+      }
+      const { orders } = payment
+      const totalPrice = this.getTotalPrice(orders)
+      if (totalPrice !== body.transferAmount) {
+        throw new BadRequestException(`Price not match, expected ${totalPrice} but got ${body.transferAmount}`)
+      }
 
-    return { paymentId, message: 'Payment success' }
+      // 3. Cập nhật trạng thái đơn hàng
+      await Promise.all([
+        tx.payment.update({
+          where: {
+            id: paymentId,
+          },
+          data: {
+            status: PaymentStatus.SUCCESS,
+          },
+        }),
+        tx.order.updateMany({
+          where: {
+            id: {
+              in: orders.map((order) => order.id),
+            },
+          },
+          data: {
+            status: OrderStatus.PENDING_PICKUP,
+          },
+        }),
+        this.paymentProducer.removeJob(paymentId),
+      ])
+      return paymentId
+    })
+
+    return { message: 'Payment success' }
   }
 }
