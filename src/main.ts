@@ -6,7 +6,9 @@ import { WebscoketAdapter } from './websockets/websocket.adapter'
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   app.enableCors()
-  app.useWebSocketAdapter(new WebscoketAdapter(app))
+  const websocketAdapter = new WebscoketAdapter(app)
+  await websocketAdapter.connectToRedis()
+  app.useWebSocketAdapter(websocketAdapter)
   await app.listen(process.env.PORT ?? 3000)
 }
 bootstrap()
