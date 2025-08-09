@@ -69,7 +69,7 @@ export class OrderRepo {
   async create(
     userId: number,
     body: CreateOrderBodyType,
-  ): Promise<{ paymentId: number; orders: CreateOrderResType['data'] }> {
+  ): Promise<{ paymentId: number; orders: CreateOrderResType['orders'] }> {
     // Check carItemIds in db
     const allBodyCartItemIds = body.map((item) => item.cartItemIds).flat()
     const cartItems = await this.prismaService.cartItem.findMany({
