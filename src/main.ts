@@ -4,12 +4,13 @@ import { NestExpressApplication } from '@nestjs/platform-express'
 import { WebscoketAdapter } from './websockets/websocket.adapter'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { patchNestJsSwagger } from 'nestjs-zod'
+import helmet from 'helmet'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   app.set('trust proxy', 'loopback')
   app.enableCors()
-
+  app.use(helmet())
   patchNestJsSwagger()
   const config = new DocumentBuilder()
     .setTitle('Ecommerce API')
