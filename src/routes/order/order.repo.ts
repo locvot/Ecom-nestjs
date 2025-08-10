@@ -71,66 +71,82 @@ export class OrderRepo {
     body: CreateOrderBodyType,
   ): Promise<{ paymentId: number; orders: CreateOrderResType['orders'] }> {
     // Check carItemIds in db
-    const allBodyCartItemIds = body.map((item) => item.cartItemIds).flat()
-    const cartItems = await this.prismaService.cartItem.findMany({
-      where: {
-        id: {
-          in: allBodyCartItemIds,
+    const [paymentId, orders] = await this.prismaService.$transaction(async (tx) => {
+      const allBodyCartItemIds = body.map((item) => item.cartItemIds).flat()
+      const cartItemsForSKUId = await tx.cartItem.findMany({
+        where: {
+          id: {
+            in: allBodyCartItemIds,
+          },
+          userId,
         },
-        userId,
-      },
-      include: {
-        sku: {
-          include: {
-            product: {
-              include: { productTranslations: true },
+        select: {
+          skuId: true,
+        },
+      })
+
+      const skuIds = cartItemsForSKUId.map((cartItem) => cartItem.skuId)
+      await tx.$queryRaw`SELECT * FROM "SKU" WHERE id IN (${Prisma.join(skuIds)}) FOR UPDATE`
+      const cartItems = await tx.cartItem.findMany({
+        where: {
+          id: {
+            in: allBodyCartItemIds,
+          },
+          userId,
+        },
+        include: {
+          sku: {
+            include: {
+              product: {
+                include: {
+                  productTranslations: true,
+                },
+              },
             },
           },
         },
-      },
-    })
-
-    if (cartItems.length !== allBodyCartItemIds.length) {
-      throw NotFoundCartItemException
-    }
-
-    // Check if quantity > stock
-    const isOutOfStock = cartItems.some((item) => {
-      return item.sku.stock < item.quantity
-    })
-    if (isOutOfStock) {
-      throw OutOfStockSKUException
-    }
-
-    // Check if any cart item is deleted
-    const isExistNotReadyProduct = cartItems.some(
-      (item) =>
-        item.sku.product.deletedAt !== null ||
-        item.sku.product.publishedAt === null ||
-        item.sku.product.publishedAt > new Date(),
-    )
-    if (isExistNotReadyProduct) {
-      throw ProductNotFoundException
-    }
-
-    // Check skuID in cartItem and shopId is valid
-    const cartItemMap = new Map<number, (typeof cartItems)[0]>()
-    cartItems.forEach((item) => {
-      cartItemMap.set(item.id, item)
-    })
-    const isValidShop = body.every((item) => {
-      const bodyCartItemIds = item.cartItemIds
-      return bodyCartItemIds.every((cartItemId) => {
-        const cartItem = cartItemMap.get(cartItemId)
-        return item.shopId === cartItem?.sku.createdById
       })
-    })
-    if (!isValidShop) {
-      throw SKUNotBelongToShopException
-    }
 
-    // Create order and delete cart item
-    const [paymentId, orders] = await this.prismaService.$transaction(async (tx) => {
+      if (cartItems.length !== allBodyCartItemIds.length) {
+        throw NotFoundCartItemException
+      }
+
+      // Check if quantity > stock
+      const isOutOfStock = cartItems.some((item) => {
+        return item.sku.stock < item.quantity
+      })
+      if (isOutOfStock) {
+        throw OutOfStockSKUException
+      }
+
+      // Check if any cart item is deleted
+      const isExistNotReadyProduct = cartItems.some(
+        (item) =>
+          item.sku.product.deletedAt !== null ||
+          item.sku.product.publishedAt === null ||
+          item.sku.product.publishedAt > new Date(),
+      )
+      if (isExistNotReadyProduct) {
+        throw ProductNotFoundException
+      }
+
+      // Check skuID in cartItem and shopId is valid
+      const cartItemMap = new Map<number, (typeof cartItems)[0]>()
+      cartItems.forEach((item) => {
+        cartItemMap.set(item.id, item)
+      })
+      const isValidShop = body.every((item) => {
+        const bodyCartItemIds = item.cartItemIds
+        return bodyCartItemIds.every((cartItemId) => {
+          const cartItem = cartItemMap.get(cartItemId)
+          return item.shopId === cartItem?.sku.createdById
+        })
+      })
+      if (!isValidShop) {
+        throw SKUNotBelongToShopException
+      }
+
+      // Create order and delete cart item
       const payment = await tx.payment.create({
         data: {
           status: PaymentStatus.PENDING,
