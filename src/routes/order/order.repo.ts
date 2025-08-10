@@ -205,7 +205,7 @@ export class OrderRepo {
             orders.push(order)
           }
 
-          const cartItem$ = tx.cartItem.deleteMany({
+          await tx.cartItem.deleteMany({
             where: {
               id: {
                 in: allBodyCartItemIds,
@@ -217,6 +217,10 @@ export class OrderRepo {
               .update({
                 where: {
                   id: item.sku.id,
+                  updatedAt: item.sku.updatedAt,
+                  stock: {
+                    gte: item.quantity,
+                  },
                 },
                 data: {
                   stock: {
