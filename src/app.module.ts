@@ -29,6 +29,7 @@ import { PaymentConsumer } from './queues/payment.consumer'
 import { WebsocketsModule } from './websockets/websockets.module'
 import envConfig from './shared/config'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
+import { ReviewModule } from './routes/review/review.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
     OrderModule,
     PaymentModule,
     WebsocketsModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [
