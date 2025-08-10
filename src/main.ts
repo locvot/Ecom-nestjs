@@ -5,17 +5,18 @@ import { WebscoketAdapter } from './websockets/websocket.adapter'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { patchNestJsSwagger } from 'nestjs-zod'
 import helmet from 'helmet'
-import { ConsoleLogger } from '@nestjs/common'
-import { LoggingInterceptor } from './shared/interceptor/logging.interceptor'
+// import { LoggingInterceptor } from './shared/interceptor/logging.interceptor'
+import { Logger } from 'nestjs-pino'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: new ConsoleLogger({}),
+    bufferLogs: true,
   })
+  app.useLogger(app.get(Logger))
   app.set('trust proxy', 'loopback')
   app.enableCors()
   app.use(helmet())
-  app.useGlobalInterceptors(new LoggingInterceptor())
+  // app.useGlobalInterceptors(new LoggingInterceptor())
   patchNestJsSwagger()
   const config = new DocumentBuilder()
     .setTitle('Ecommerce API')
