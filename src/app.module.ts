@@ -29,10 +29,13 @@ import { PaymentConsumer } from './queues/payment.consumer'
 import { WebsocketsModule } from './websockets/websockets.module'
 import envConfig from './shared/config'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
-import { ReviewModule } from './routes/review/review.module';
+import { ReviewModule } from './routes/review/review.module'
+import { ScheduleModule } from '@nestjs/schedule'
+import { RemoveRefreshTokenCronjob } from './cronjobs/remove-refresh-token.cronjob'
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     BullModule.forRoot({
       connection: {
         url: envConfig.REDIS_URL,
@@ -95,6 +98,7 @@ import { ReviewModule } from './routes/review/review.module';
       useClass: ThrottlerGuard,
     },
     PaymentConsumer,
+    RemoveRefreshTokenCronjob,
   ],
 })
 export class AppModule {}
