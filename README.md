@@ -1,98 +1,163 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+<!-- HEADER STYLE: CLASSIC -->
+<div align="center">
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# ECOM-NESTJS
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+<em>Empowering Commerce Through Seamless Innovation and Scale</em>
 
-## Description
+<!-- BADGES -->
+<img src="https://img.shields.io/github/last-commit/locvot/Ecom-nestjs?style=flat&logo=git&logoColor=white&color=0080ff" alt="last-commit">
+<img src="https://img.shields.io/github/languages/top/locvot/Ecom-nestjs?style=flat&color=0080ff" alt="repo-top-language">
+<img src="https://img.shields.io/github/languages/count/locvot/Ecom-nestjs?style=flat&color=0080ff" alt="repo-language-count">
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+<em>Built with the tools and technologies:</em>
 
-## Project setup
+<img src="https://img.shields.io/badge/JSON-000000.svg?style=flat&logo=JSON&logoColor=white" alt="JSON">
+<img src="https://img.shields.io/badge/Markdown-000000.svg?style=flat&logo=Markdown&logoColor=white" alt="Markdown">
+<img src="https://img.shields.io/badge/Resend-000000.svg?style=flat&logo=Resend&logoColor=white" alt="Resend">
+<img src="https://img.shields.io/badge/Socket.io-010101.svg?style=flat&logo=socketdotio&logoColor=white" alt="Socket.io">
+<img src="https://img.shields.io/badge/npm-CB3837.svg?style=flat&logo=npm&logoColor=white" alt="npm">
+<img src="https://img.shields.io/badge/Redis-FF4438.svg?style=flat&logo=Redis&logoColor=white" alt="Redis">
+<img src="https://img.shields.io/badge/Prettier-F7B93E.svg?style=flat&logo=Prettier&logoColor=black" alt="Prettier">
+<img src="https://img.shields.io/badge/.ENV-ECD53F.svg?style=flat&logo=dotenv&logoColor=black" alt=".ENV">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?style=flat&logo=JavaScript&logoColor=black" alt="JavaScript">
+<img src="https://img.shields.io/badge/React-61DAFB.svg?style=flat&logo=React&logoColor=black" alt="React">
+<br>
+<img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat&logo=TypeScript&logoColor=white" alt="TypeScript">
+<img src="https://img.shields.io/badge/tsnode-3178C6.svg?style=flat&logo=ts-node&logoColor=white" alt="tsnode">
+<img src="https://img.shields.io/badge/Lodash-3492FF.svg?style=flat&logo=Lodash&logoColor=white" alt="Lodash">
+<img src="https://img.shields.io/badge/Prisma-2D3748.svg?style=flat&logo=Prisma&logoColor=white" alt="Prisma">
+<img src="https://img.shields.io/badge/Zod-3E67B1.svg?style=flat&logo=Zod&logoColor=white" alt="Zod">
+<img src="https://img.shields.io/badge/ESLint-4B32C3.svg?style=flat&logo=ESLint&logoColor=white" alt="ESLint">
+<img src="https://img.shields.io/badge/Socket-C93CD7.svg?style=flat&logo=Socket&logoColor=white" alt="Socket">
+<img src="https://img.shields.io/badge/datefns-770C56.svg?style=flat&logo=date-fns&logoColor=white" alt="datefns">
+<img src="https://img.shields.io/badge/Jest-C21325.svg?style=flat&logo=Jest&logoColor=white" alt="Jest">
 
-```bash
-$ npm install
+</div>
+<br>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Usage](#usage)
+    - [Testing](#testing)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Roadmap](#roadmap)
+
+---
+
+## Overview
+
+
+
+---
+
+## Features
+
+|      | Component            | Details                                                                                     |
+| :--- | :------------------- | :------------------------------------------------------------------------------------------ |
+| ⚙️  | **Architecture**     | <ul><li>Modular monolith with clear separation of concerns</li><li>Uses NestJS framework for backend structure</li><li>Layered architecture: controllers, services, modules, repositories</li></ul> |
+| 🔩 | **Code Quality**     | <ul><li>TypeScript with strict type enforcement</li><li>Consistent code style, likely enforced via ESLint & Prettier</li><li>Uses decorators for dependency injection and metadata</li></ul> |
+| 📄 | **Documentation**    | <ul><li>Basic README with project overview</li><li>API documentation via Swagger (@nestjs/swagger)</li><li>Type definitions and Prisma schema documented</li></ul> |
+| 🔌 | **Integrations**     | <ul><li>Database: Prisma ORM with PostgreSQL/MySQL</li><li>WebSockets: @nestjs/websockets, socket.io, Redis adapter</li><li>Messaging & Queues: BullMQ, Redis</li><li>Authentication: @nestjs/jwt, bcrypt</li><li>File Storage: AWS S3 via @aws-sdk</li><li>Email: react-email, resend</li><li>Logging & Monitoring: nestjs-pino, helmet for security</li></ul> |
+| 🧩 | **Modularity**       | <ul><li>Feature modules for products, users, orders, payments, notifications</li><li>Shared modules for common utilities</li><li>Uses Prisma schema for data models</li></ul> |
+| 🧪 | **Testing**          | <ul><li>Uses Jest for unit and e2e tests</li><li>Test setup includes @nestjs/testing, supertest</li><li>Test coverage likely enforced</li></ul> |
+| ⚡️  | **Performance**      | <ul><li>Uses @nestjs/platform-express with compression</li><li>Async operations with RxJS</li><li>Redis & BullMQ for background jobs</li></ul> |
+| 🛡️ | **Security**         | <ul><li>Helmet middleware for security headers</li><li>JWT for auth tokens</li><li>Rate limiting via @nestjs/throttler</li><li>Input validation with Zod & class-validator</li></ul> |
+| 📦 | **Dependencies**     | <ul><li>Core: typescript, nestjs, prisma, rxjs</li><li>Utilities: lodash, date-fns, uuid</li><li>Security: bcrypt, helmet</li><li>Storage & Cloud: @aws-sdk, googleapis</li><li>Testing: jest, supertest</li></ul> |
+
+---
+
+## Project Structure
+
+```sh
+└── Ecom-nestjs/
+    ├── README.md
+    ├── emails
+    │   └── otp.tsx
+    ├── eslint.config.mjs
+    ├── initialScript
+    │   ├── create-permissions.ts
+    │   └── index.ts
+    ├── nest-cli.json
+    ├── package-lock.json
+    ├── package.json
+    ├── prisma
+    │   ├── migrations
+    │   └── schema.prisma
+    ├── src
+    │   ├── app.controller.spec.ts
+    │   ├── app.controller.ts
+    │   ├── app.module.ts
+    │   ├── app.service.ts
+    │   ├── cronjobs
+    │   ├── generated
+    │   ├── i18n
+    │   ├── main.ts
+    │   ├── queues
+    │   ├── routes
+    │   ├── shared
+    │   ├── types.ts
+    │   └── websockets
+    ├── test
+    │   ├── app.e2e-spec.ts
+    │   └── jest-e2e.json
+    ├── tsconfig.build.json
+    └── tsconfig.json
 ```
 
-## Compile and run the project
 
-```bash
-# development
-$ npm run start
+---
 
-# watch mode
-$ npm run start:dev
+## Getting Started
 
-# production mode
-$ npm run start:prod
+### Installation
+
+Build Ecom-nestjs from the source and install dependencies:
+
+1. **Clone the repository:**
+
+    ```sh
+    ❯ git clone https://github.com/locvot/Ecom-nestjs
+    ```
+
+2. **Navigate to the project directory:**
+
+    ```sh
+    ❯ cd Ecom-nestjs
+    ```
+
+3. **Install the dependencies:**
+
+**Using [npm](https://www.npmjs.com/):**
+
+```sh
+❯ npm install
 ```
 
-## Run tests
+### Usage
 
-```bash
-# unit tests
-$ npm run test
+Run the project with:
 
-# e2e tests
-$ npm run test:e2e
+**Using [npm](https://www.npmjs.com/):**
 
-# test coverage
-$ npm run test:cov
+```sh
+npm start
 ```
 
-## Deployment
+### Testing
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Ecom-nestjs uses the {__test_framework__} test framework. Run the test suite with:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+**Using [npm](https://www.npmjs.com/):**
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```sh
+npm test
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
