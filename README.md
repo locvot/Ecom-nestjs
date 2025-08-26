@@ -53,7 +53,14 @@
 
 ## Overview
 
+Ecom-nestjs is a comprehensive backend framework tailored for building scalable, real-time e-commerce platforms. It leverages a modular NestJS architecture to facilitate maintainability and growth, while integrating WebSocket support for instant communication and updates. The core features include:
 
+- 🧩 **Modular Design:** Enables flexible, scalable backend development with well-organized modules.
+- 🌐 **Real-Time WebSocket Integration:** Supports live chat and payment updates through Redis-backed WebSocket gateways.
+- 📊 **Rich Data Modeling:** Uses shared DTOs, models, and internationalization for multilingual, consistent data handling.
+- 🔒 **Robust Security:** Implements guards, decorators, and 2FA for secure user authentication and role management.
+- 💳 **Payment & Order Management:** Handles webhook processing, background jobs, and order lifecycle with reliability.
+- 🛠️ **Developer-Friendly:** Configurable TypeScript, ESLint, and Prisma ORM ensure code quality and seamless database interactions.
 
 ---
 
