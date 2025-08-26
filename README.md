@@ -48,7 +48,6 @@
     - [Testing](#testing)
 - [Features](#features)
 - [Project Structure](#project-structure)
-- [Roadmap](#roadmap)
 
 ---
 
