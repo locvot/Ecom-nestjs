@@ -7,6 +7,23 @@ const SellerModule = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 
 const ClientModule = ['AUTH', 'MEDIA', 'PROFILE', 'CART', 'ORDERS', 'REVIEWS']
 const prisma = new PrismaService()
 
+const createGraphqlPermissions = async () => {
+  const permission = await prisma.permission.findFirst({
+    where: {
+      path: '/graphql',
+    },
+  })
+  if (permission) return permission
+  return prisma.permission.create({
+    data: {
+      name: 'Graphql path',
+      description: 'Access to Graphql',
+      path: '/graphql',
+      method: HTTPMethod.POST,
+    },
+  })
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   await app.listen(3010)
@@ -19,22 +36,23 @@ async function bootstrap() {
   })
   const validMethods = Object.keys(HTTPMethod) // ['GET','POST','PUT','DELETE','PATCH']
 
-  const availableRoutes = router.stack
-    .map((layer) => {
-      if (layer.route) {
-        const path = layer.route.path
-        const method = String(layer.route.stack[0].method).toUpperCase()
-        if (!validMethods.includes(method)) return undefined // bỏ qua ACL, ALL
-        const moduleName = String(path.split('/')[1]).toUpperCase()
-        return {
-          path,
-          method: method as keyof typeof HTTPMethod,
-          name: method + ' ' + path,
-          module: moduleName,
+  const availableRoutes: { path: string; method: keyof typeof HTTPMethod; name: string; module: string }[] =
+    router.stack
+      .map((layer) => {
+        const method = String(layer.route?.stack[0].method).toUpperCase()
+        if (layer.route && HTTPMethod[method as keyof typeof HTTPMethod]) {
+          const path = layer.route?.path
+
+          const moduleName = String(path.split('/')[1]).toUpperCase()
+          return {
+            path,
+            method,
+            name: method + ' ' + path,
+            module: moduleName,
+          }
         }
-      }
-    })
-    .filter((item) => item !== undefined)
+      })
+      .filter((item) => item !== undefined)
   // Tạo object permissionInDbMap với key là [method-path]
   const permissionInDbMap: Record<string, (typeof permissionsInDb)[0]> = permissionsInDb.reduce((acc, item) => {
     acc[`${item.method}-${item.path}`] = item
@@ -84,13 +102,24 @@ async function bootstrap() {
       deletedAt: null,
     },
   })
-  const adminPermissionIds = updatedPermissionsInDb.map((item) => ({ id: item.id }))
+  const graphqlPermission = await createGraphqlPermissions()
+  const adminPermissionIds = updatedPermissionsInDb
+    .map((item) => ({ id: item.id }))
+    .concat({
+      id: graphqlPermission.id,
+    })
   const sellerPermissionIds = updatedPermissionsInDb
     .filter((item) => SellerModule.includes(item.module))
     .map((item) => ({ id: item.id }))
+    .concat({
+      id: graphqlPermission.id,
+    })
   const clientPermissionIds = updatedPermissionsInDb
     .filter((item) => ClientModule.includes(item.module))
     .map((item) => ({ id: item.id }))
+    .concat({
+      id: graphqlPermission.id,
+    })
 
   await Promise.all([
     updateRole(adminPermissionIds, RoleName.Admin),
