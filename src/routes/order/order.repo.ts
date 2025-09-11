@@ -1,5 +1,13 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
+import { OrderStatus, Prisma } from '@prisma/client'
+import {
+  CannotCancelOrderException,
+  NotFoundCartItemException,
+  OrderNotFoundException,
+  OutOfStockSKUException,
+  ProductNotFoundException,
+  SKUNotBelongToShopException,
+} from 'src/routes/order/order.error'
 import {
   CancelOrderResType,
   CreateOrderBodyType,
@@ -7,30 +15,22 @@ import {
   GetOrderDetailResType,
   GetOrderListQueryType,
   GetOrderListResType,
-} from './order.model'
-import { Prisma } from '@prisma/client'
-import {
-  CannotCancelOrderExeception,
-  NotFoundCartItemException,
-  OrderNotFoundException,
-  OutOfStockSKUException,
-  ProductNotFoundException,
-  SKUNotBelongToShopException,
-} from './order.error'
-import { OrderStatus } from 'src/shared/constants/order.constant'
-import { isNotFoundPrismaError } from 'src/shared/helpers'
+} from 'src/routes/order/order.model'
+import { OrderProducer } from 'src/routes/order/order.producer'
 import { PaymentStatus } from 'src/shared/constants/payment.constant'
-import { OrderProducer } from './order.producer'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
 import { VersionConflictException } from 'src/shared/error'
+import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { redlock } from 'src/shared/redis'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class OrderRepo {
   constructor(
     private readonly prismaService: PrismaService,
     private orderProducer: OrderProducer,
   ) {}
-
   async list(userId: number, query: GetOrderListQueryType): Promise<GetOrderListResType> {
     const { page, limit, status } = query
     const skip = (page - 1) * limit
@@ -40,12 +40,11 @@ export class OrderRepo {
       status,
     }
 
-    // Count total order
+    // Đếm tổng số order
     const totalItem$ = this.prismaService.order.count({
       where,
     })
-
-    // Get list order
+    // Lấy list order
     const data$ = await this.prismaService.order.findMany({
       where,
       include: {
@@ -57,7 +56,6 @@ export class OrderRepo {
         createdAt: 'desc',
       },
     })
-
     const [data, totalItems] = await Promise.all([data$, totalItem$])
     return {
       data,
@@ -65,14 +63,22 @@ export class OrderRepo {
       limit,
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
-    }
+    } as any
   }
 
   async create(
     userId: number,
     body: CreateOrderBodyType,
-  ): Promise<{ paymentId: number; orders: CreateOrderResType['orders'] }> {
-    // Check carItemIds in db
+  ): Promise<{
+    paymentId: number
+    orders: CreateOrderResType['orders']
+  }> {
+    // 1. Kiểm tra xem tất cả cartItemIds có tồn tại trong cơ sở dữ liệu hay không
+    // 2. Kiểm tra số lượng mua có lớn hơn số lượng tồn kho hay không
+    // 3. Kiểm tra xem tất cả sản phẩm mua có sản phẩm nào bị xóa hay ẩn không
+    // 4. Kiểm tra xem các skuId trong cartItem gửi lên có thuộc về shopid gửi lên không
+    // 5. Tạo order
+    // 6. Xóa cartItem
     const allBodyCartItemIds = body.map((item) => item.cartItemIds).flat()
     const cartItemsForSKUId = await this.prismaService.cartItem.findMany({
       where: {
@@ -85,16 +91,15 @@ export class OrderRepo {
         skuId: true,
       },
     })
-
     const skuIds = cartItemsForSKUId.map((cartItem) => cartItem.skuId)
-    // await tx.$queryRaw`SELECT * FROM "SKU" WHERE id IN (${Prisma.join(skuIds)}) FOR UPDATE`
 
-    // Lock all SKU that user buy
-    const locks = await Promise.all(skuIds.map((skuId) => redlock.acquire([`lock:sku:${skuId}`], 3000)))
+    // Lock tất cả các SKU cần mua
+    const locks = await Promise.all(skuIds.map((skuId) => redlock.acquire([`lock:sku:${skuId}`], 3000))) // Giữ khóa trong 3 giây
 
     try {
       const [paymentId, orders] = await this.prismaService.$transaction<[number, CreateOrderResType['orders']]>(
         async (tx) => {
+          // await tx.$queryRaw`SELECT * FROM "SKU" WHERE id IN (${Prisma.join(skuIds)}) FOR UPDATE`
           const cartItems = await tx.cartItem.findMany({
             where: {
               id: {
@@ -115,11 +120,12 @@ export class OrderRepo {
             },
           })
 
+          // 1. Kiểm tra xem tất cả cartItemIds có tồn tại trong cơ sở dữ liệu hay không
           if (cartItems.length !== allBodyCartItemIds.length) {
             throw NotFoundCartItemException
           }
 
-          // Check if quantity > stock
+          // 2. Kiểm tra số lượng mua có lớn hơn số lượng tồn kho hay không
           const isOutOfStock = cartItems.some((item) => {
             return item.sku.stock < item.quantity
           })
@@ -127,7 +133,7 @@ export class OrderRepo {
             throw OutOfStockSKUException
           }
 
-          // Check if any cart item is deleted
+          // 3. Kiểm tra xem tất cả sản phẩm mua có sản phẩm nào bị xóa hay ẩn không
           const isExistNotReadyProduct = cartItems.some(
             (item) =>
               item.sku.product.deletedAt !== null ||
@@ -138,7 +144,7 @@ export class OrderRepo {
             throw ProductNotFoundException
           }
 
-          // Check skuID in cartItem and shopId is valid
+          // 4. Kiểm tra xem các skuId trong cartItem gửi lên có thuộc về shopid gửi lên không
           const cartItemMap = new Map<number, (typeof cartItems)[0]>()
           cartItems.forEach((item) => {
             cartItemMap.set(item.id, item)
@@ -146,15 +152,18 @@ export class OrderRepo {
           const isValidShop = body.every((item) => {
             const bodyCartItemIds = item.cartItemIds
             return bodyCartItemIds.every((cartItemId) => {
-              const cartItem = cartItemMap.get(cartItemId)
-              return item.shopId === cartItem?.sku.createdById
+              // Neu đã đến bước này thì cartItem luôn luôn có giá trị
+              // Vì chúng ta đã so sánh với allBodyCartItems.length ở trên rồi
+              const cartItem = cartItemMap.get(cartItemId)!
+              return item.shopId === cartItem.sku.createdById
             })
           })
           if (!isValidShop) {
             throw SKUNotBelongToShopException
           }
 
-          // Create order and delete cart item
+          // 5. Tạo order và xóa cartItem trong transaction để đảm bảo tính toàn vẹn dữ liệu
+
           const payment = await tx.payment.create({
             data: {
               status: PaymentStatus.PENDING,
@@ -202,7 +211,7 @@ export class OrderRepo {
                 },
               },
             })
-            orders.push(order)
+            orders.push(order as any)
           }
 
           await tx.cartItem.deleteMany({
@@ -213,13 +222,13 @@ export class OrderRepo {
             },
           })
           for (const item of cartItems) {
-            tx.sKU
+            await tx.sKU
               .update({
                 where: {
                   id: item.sku.id,
-                  updatedAt: item.sku.updatedAt,
+                  updatedAt: item.sku.updatedAt, // Đảm bảo không có ai cập nhật SKU trong khi chúng ta đang xử lý
                   stock: {
-                    gte: item.quantity,
+                    gte: item.quantity, // Đảm bảo số lượng tồn kho đủ để trừ
                   },
                 },
                 data: {
@@ -228,11 +237,11 @@ export class OrderRepo {
                   },
                 },
               })
-              .catch((error) => {
-                if (isNotFoundPrismaError(error)) {
+              .catch((e) => {
+                if (isNotFoundPrismaError(e)) {
                   throw VersionConflictException
                 }
-                throw error
+                throw e
               })
           }
           await this.orderProducer.addCancelPaymentJob(payment.id)
@@ -245,14 +254,15 @@ export class OrderRepo {
         orders,
       }
     } finally {
+      // Giải phóng lock
       await Promise.all(locks.map((lock) => lock.release().catch(() => {})))
     }
   }
 
-  async detail(userId: number, orderId: number): Promise<GetOrderDetailResType> {
+  async detail(userId: number, orderid: number): Promise<GetOrderDetailResType> {
     const order = await this.prismaService.order.findUnique({
       where: {
-        id: orderId,
+        id: orderid,
         userId,
         deletedAt: null,
       },
@@ -263,22 +273,22 @@ export class OrderRepo {
     if (!order) {
       throw OrderNotFoundException
     }
-    return order
+    return order as any
   }
 
   async cancel(userId: number, orderId: number): Promise<CancelOrderResType> {
     try {
       const order = await this.prismaService.order.findUniqueOrThrow({
         where: {
-          id: userId,
+          id: orderId,
           userId,
           deletedAt: null,
         },
       })
       if (order.status !== OrderStatus.PENDING_PAYMENT) {
-        throw CannotCancelOrderExeception
+        throw CannotCancelOrderException
       }
-      const updateOrder = await this.prismaService.order.update({
+      const updatedOrder = await this.prismaService.order.update({
         where: {
           id: orderId,
           userId,
@@ -289,7 +299,7 @@ export class OrderRepo {
           updatedById: userId,
         },
       })
-      return updateOrder
+      return updatedOrder as any
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw OrderNotFoundException

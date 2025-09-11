@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { BrandRepo } from './brand.repo'
-import { PaginationQueryType } from 'src/shared/models/request.model'
+import { BrandRepo } from 'src/routes/brand/brand.repo'
+import { CreateBrandBodyType, UpdateBrandBodyType } from 'src/routes/brand/brand.model'
 import { NotFoundRecordException } from 'src/shared/error'
-import { CreateBrandBodyType, UpdateBrandBodyType } from './brand.model'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
+import { PaginationQueryType } from 'src/shared/models/request.model'
 import { I18nContext } from 'nestjs-i18n'
 
 @Injectable()
@@ -23,8 +23,8 @@ export class BrandService {
     return brand
   }
 
-  async create({ data, createdById }: { data: CreateBrandBodyType; createdById: number }) {
-    return await this.brandRepo.create({
+  create({ data, createdById }: { data: CreateBrandBodyType; createdById: number }) {
+    return this.brandRepo.create({
       createdById,
       data,
     })
@@ -52,6 +52,9 @@ export class BrandService {
         id,
         deletedById,
       })
+      return {
+        message: 'Delete successfully',
+      }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException

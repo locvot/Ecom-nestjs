@@ -1,9 +1,8 @@
-import { z } from 'zod'
-
+import { ProductTranslationSchema } from 'src/shared/models/shared-product-translation.model'
 import { ProductSchema } from 'src/shared/models/shared-product.model'
 import { SKUSchema } from 'src/shared/models/shared-sku.model'
 import { UserSchema } from 'src/shared/models/shared-user.model'
-import { ProductTranslationSchema } from 'src/shared/models/shared-product-translation.model'
+import { z } from 'zod'
 
 export const CartItemSchema = z.object({
   id: z.number(),
@@ -11,8 +10,8 @@ export const CartItemSchema = z.object({
   skuId: z.number(),
   userId: z.number(),
 
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
 export const GetCartItemParamsSchema = z.object({
@@ -62,9 +61,9 @@ export const CartItemDetailSchema = z.object({
 export const GetCartResSchema = z.object({
   data: z.array(CartItemDetailSchema),
   totalItems: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number(),
+  page: z.number(), // Số trang hiện tại
+  limit: z.number(), // Số item trên 1 trang
+  totalPages: z.number(), // Tổng số trang
 })
 
 export const AddToCartBodySchema = CartItemSchema.pick({

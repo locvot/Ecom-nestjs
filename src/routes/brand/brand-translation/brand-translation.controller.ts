@@ -1,27 +1,27 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
-import { BrandTranslationService } from './brand-translation.service'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
 import {
   CreateBrandTranslationBodyDTO,
   GetBrandTranslationDetailResDTO,
   GetBrandTranslationParamsDTO,
   UpdateBrandTranslationBodyDTO,
-} from './brand-translation.dto'
+} from 'src/routes/brand/brand-translation/brand-translation.dto'
+import { BrandTranslationService } from 'src/routes/brand/brand-translation/brand-translation.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 
-@Controller('brand-translation')
+@Controller('brand-translations')
 export class BrandTranslationController {
   constructor(private readonly brandTranslationService: BrandTranslationService) {}
 
   @Get(':brandTranslationId')
-  @ZodSerializerDto(GetBrandTranslationDetailResDTO)
+  @ZodResponse({ type: GetBrandTranslationDetailResDTO })
   findById(@Param() params: GetBrandTranslationParamsDTO) {
     return this.brandTranslationService.findById(params.brandTranslationId)
   }
 
   @Post()
-  @ZodSerializerDto(GetBrandTranslationDetailResDTO)
+  @ZodResponse({ type: GetBrandTranslationDetailResDTO })
   create(@Body() body: CreateBrandTranslationBodyDTO, @ActiveUser('userId') userId: number) {
     return this.brandTranslationService.create({
       data: body,
@@ -30,7 +30,7 @@ export class BrandTranslationController {
   }
 
   @Put(':brandTranslationId')
-  @ZodSerializerDto(GetBrandTranslationDetailResDTO)
+  @ZodResponse({ type: GetBrandTranslationDetailResDTO })
   update(
     @Body() body: UpdateBrandTranslationBodyDTO,
     @Param() params: GetBrandTranslationParamsDTO,
@@ -44,7 +44,7 @@ export class BrandTranslationController {
   }
 
   @Delete(':brandTranslationId')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   delete(@Param() params: GetBrandTranslationParamsDTO, @ActiveUser('userId') userId: number) {
     return this.brandTranslationService.delete({
       id: params.brandTranslationId,

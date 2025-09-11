@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common'
-import { ProductService } from './product.service'
-import { ProductController } from './product.controller'
-import { ProductTranslationModule } from './product-translation/product-translation.module'
-import { ProductRepo } from './product.repo'
-import { ManageProductService } from './manage-product.service'
-import { ManageProductController } from './manage-product.controller'
+import { ManageProductController } from 'src/routes/product/manage-product.controller'
+import { ManageProductService } from 'src/routes/product/manage-product.service'
+import { ProductController } from 'src/routes/product/product.controller'
+import { ProductRepo } from 'src/routes/product/product.repo'
+import { ProductService } from 'src/routes/product/product.service'
 
 @Module({
-  providers: [ProductService, ProductRepo, ManageProductService],
+  providers: [ProductService, ManageProductService, ProductRepo],
   controllers: [ProductController, ManageProductController],
 })
 export class ProductModule {}

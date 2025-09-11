@@ -6,16 +6,13 @@ export const GetCategoryTranslationParamsSchema = z
     categoryTranslationId: z.coerce.number().int().positive(),
   })
   .strict()
-
 export const GetCategoryTranslationDetailResSchema = CategoryTranslationSchema
-
 export const CreateCategoryTranslationBodySchema = CategoryTranslationSchema.pick({
   categoryId: true,
   languageId: true,
   name: true,
   description: true,
 }).strict()
-
 export const UpdateCategoryTranslationBodySchema = CreateCategoryTranslationBodySchema
 
 export type CategoryTranslationType = z.infer<typeof CategoryTranslationSchema>

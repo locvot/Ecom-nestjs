@@ -1,18 +1,20 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
-import { PaginationQueryType } from 'src/shared/models/request.model'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CreateReviewBodyType,
   CreateReviewResType,
   GetReviewsType,
   UpdateReviewBodyType,
   UpdateReviewResType,
-} from './review.model'
+} from 'src/routes/review/review.model'
 import { OrderStatus } from 'src/shared/constants/order.constant'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
 import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { PaginationQueryType } from 'src/shared/models/request.model'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
-export class ReviewRepo {
+@SerializeAll()
+export class ReviewRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(productId: number, pagination: PaginationQueryType): Promise<GetReviewsType> {
@@ -21,7 +23,9 @@ export class ReviewRepo {
 
     const [totalItems, data] = await Promise.all([
       this.prismaService.review.count({
-        where: { productId },
+        where: {
+          productId,
+        },
       }),
       this.prismaService.review.findMany({
         where: {
@@ -50,7 +54,7 @@ export class ReviewRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    }
+    } as any
   }
 
   private async validateOrder({ orderId, userId }: { orderId: number; userId: number }) {
@@ -60,11 +64,12 @@ export class ReviewRepo {
         userId,
       },
     })
-    // user can only review if they buy that product
+    // Mua hàng thì mới được review
     if (!order) {
-      throw new BadRequestException('Đơn hàng không tồn tại')
+      throw new BadRequestException('Đơn hàng không tồn tại hoặc không thuộc về bạn')
     }
 
+    // Đơn hàng đã giao thì mới được review
     if (order.status !== OrderStatus.DELIVERED) {
       throw new BadRequestException('Đơn hàng chưa được giao')
     }
@@ -79,7 +84,7 @@ export class ReviewRepo {
       },
     })
     if (!review) {
-      throw new NotFoundException('Đánh giá không tồn tại')
+      throw new NotFoundException('Đánh giá không tồn tại hoặc không thuộc về bạn')
     }
     if (review.updateCount >= 1) {
       throw new BadRequestException('Bạn chỉ được phép sửa đánh giá 1 lần')
@@ -89,8 +94,10 @@ export class ReviewRepo {
 
   async create(userId: number, body: CreateReviewBodyType): Promise<CreateReviewResType> {
     const { content, medias, productId, orderId, rating } = body
-    await this.validateOrder({ orderId, userId })
-
+    await this.validateOrder({
+      orderId,
+      userId,
+    })
     return this.prismaService.$transaction(async (tx) => {
       const review = await tx.review
         .create({
@@ -127,7 +134,7 @@ export class ReviewRepo {
       return {
         ...review,
         medias: reviewMedias,
-      }
+      } as any
     })
   }
 
@@ -141,7 +148,16 @@ export class ReviewRepo {
     body: UpdateReviewBodyType
   }): Promise<UpdateReviewResType> {
     const { content, medias, productId, orderId, rating } = body
-    await Promise.all([this.validateOrder({ orderId, userId }), this.validateUpdateReview({ reviewId, userId })])
+    await Promise.all([
+      this.validateOrder({
+        orderId,
+        userId,
+      }),
+      this.validateUpdateReview({
+        reviewId,
+        userId,
+      }),
+    ])
     return this.prismaService.$transaction(async (tx) => {
       const review = await tx.review.update({
         where: {
@@ -184,6 +200,6 @@ export class ReviewRepo {
         ...review,
         medias: reviewMedias,
       }
-    })
+    }) as any
   }
 }

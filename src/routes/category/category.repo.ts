@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common'
 import {
-  CategoryIncludeTranslationType,
-  CategoryType,
   CreateCategoryBodyType,
   GetAllCategoriesResType,
   UpdateCategoryBodyType,
-} from './category.model'
-import { PrismaService } from 'src/shared/services/prisma.service'
+  CategoryType,
+  CategoryIncludeTranslationType,
+} from 'src/routes/category/category.model'
 import { ALL_LANGUAGE_CODE } from 'src/shared/constants/other.constant'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class CategoryRepo {
   constructor(private prismaService: PrismaService) {}
 
-  async list({
+  async findAll({
     parentCategoryId,
     languageId,
   }: {
@@ -35,7 +37,10 @@ export class CategoryRepo {
       },
     })
 
-    return { data: categories, totalItems: categories.length }
+    return {
+      data: categories,
+      totalItems: categories.length,
+    } as any
   }
 
   findById({ id, languageId }: { id: number; languageId: string }): Promise<CategoryIncludeTranslationType | null> {
@@ -49,7 +54,7 @@ export class CategoryRepo {
           where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
         },
       },
-    })
+    }) as any
   }
 
   create({
@@ -69,7 +74,7 @@ export class CategoryRepo {
           where: { deletedAt: null },
         },
       },
-    })
+    }) as any
   }
 
   update({
@@ -95,25 +100,36 @@ export class CategoryRepo {
           where: { deletedAt: null },
         },
       },
-    })
+    }) as any
   }
 
-  delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<CategoryType> {
-    return isHard
-      ? this.prismaService.category.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.category.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+  delete(
+    {
+      id,
+      deletedById,
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean,
+  ): Promise<CategoryType> {
+    return (
+      isHard
+        ? this.prismaService.category.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.category.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

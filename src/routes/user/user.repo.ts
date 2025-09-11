@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { CreateUserBodyType, GetUsersQueryType, GetUsersResType } from './user.model'
+import { CreateUserBodyType, GetUsersQueryType, GetUsersResType, UpdateUserBodyType } from 'src/routes/user/user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { UserType } from 'src/shared/models/shared-user.model'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
 
 @Injectable()
+@SerializeAll()
 export class UserRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -33,7 +35,7 @@ export class UserRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    }
+    } as any
   }
 
   create({ createdById, data }: { createdById: number | null; data: CreateUserBodyType }): Promise<UserType> {
@@ -42,15 +44,36 @@ export class UserRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
-  delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<UserType> {
-    return isHard
-      ? this.prismaService.user.delete({ where: { id } })
-      : this.prismaService.user.update({
-          where: { id, deletedAt: null },
-          data: { deletedAt: new Date(), deletedById },
-        })
+  delete(
+    {
+      id,
+      deletedById,
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean,
+  ): Promise<UserType> {
+    return (
+      isHard
+        ? this.prismaService.user.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.user.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { ZodResponse } from 'nestjs-zod'
 import { ReviewService } from './review.service'
-import { IsPublic } from 'src/shared/decorators/auth.decorator'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import {
   CreateReviewBodyDTO,
   CreateReviewResDTO,
@@ -10,29 +10,29 @@ import {
   GetReviewsParamsDTO,
   UpdateReviewBodyDTO,
   UpdateReviewResDTO,
-} from './review.dto'
+} from 'src/routes/review/review.dto'
 import { PaginationQueryDTO } from 'src/shared/dtos/request.dto'
-import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
+import { IsPublic } from 'src/shared/decorators/auth.decorator'
 
-@Controller('review')
+@Controller('reviews')
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
   @IsPublic()
-  @Get('/product/:productId')
-  @ZodSerializerDto(GetReviewsDTO)
+  @Get('/products/:productId')
+  @ZodResponse({ type: GetReviewsDTO })
   getReviews(@Param() params: GetReviewsParamsDTO, @Query() pagination: PaginationQueryDTO) {
     return this.reviewService.list(params.productId, pagination)
   }
 
   @Post()
-  @ZodSerializerDto(CreateReviewResDTO)
+  @ZodResponse({ type: CreateReviewResDTO })
   updateReview(@Body() body: CreateReviewBodyDTO, @ActiveUser('userId') userId: number) {
     return this.reviewService.create(userId, body)
   }
 
   @Put(':reviewId')
-  @ZodSerializerDto(UpdateReviewResDTO)
+  @ZodResponse({ type: UpdateReviewResDTO })
   changePassword(
     @Body() body: UpdateReviewBodyDTO,
     @ActiveUser('userId') userId: number,

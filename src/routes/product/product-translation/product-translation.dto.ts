@@ -4,7 +4,7 @@ import {
   GetProductTranslationDetailResSchema,
   GetProductTranslationParamsSchema,
   UpdateProductTranslationBodySchema,
-} from './product-translation.model'
+} from 'src/routes/product/product-translation/product-translation.model'
 
 export class GetProductTranslationDetailResDTO extends createZodDto(GetProductTranslationDetailResSchema) {}
 

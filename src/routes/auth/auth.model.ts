@@ -1,6 +1,6 @@
-import { z } from 'zod'
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
 import { UserSchema } from 'src/shared/models/shared-user.model'
+import { z } from 'zod'
 
 export const RegisterBodySchema = UserSchema.pick({
   email: true,
@@ -30,7 +30,7 @@ export const RegisterResSchema = UserSchema.omit({
 
 export const VerificationCodeSchema = z.object({
   id: z.number(),
-  email: z.string().email(),
+  email: z.email(),
   code: z.string().length(6),
   type: z.enum([
     TypeOfVerificationCode.REGISTER,
@@ -38,8 +38,8 @@ export const VerificationCodeSchema = z.object({
     TypeOfVerificationCode.LOGIN,
     TypeOfVerificationCode.DISABLE_2FA,
   ]),
-  expiresAt: z.date(),
-  createdAt: z.date(),
+  expiresAt: z.iso.datetime(),
+  createdAt: z.iso.datetime(),
 })
 
 export const SendOTPBodySchema = VerificationCodeSchema.pick({
@@ -52,13 +52,13 @@ export const LoginBodySchema = UserSchema.pick({
   password: true,
 })
   .extend({
-    totpCode: z.string().length(6).optional(),
-    code: z.string().length(6).optional(),
+    totpCode: z.string().length(6).optional(), // 2FA code
+    code: z.string().length(6).optional(), // Email OTP code
   })
   .strict()
   .superRefine(({ totpCode, code }, ctx) => {
     // Nếu mà truyền cùng lúc totpCode và code thì sẽ add issue
-    const message = 'Only provide 2FA or OTP code'
+    const message = 'Bạn chỉ nên truyền mã xác thực 2FA hoặc mã OTP. Không được truyền cả 2'
     if (totpCode !== undefined && code !== undefined) {
       ctx.addIssue({
         path: ['totpCode'],
@@ -84,13 +84,15 @@ export const RefreshTokenBodySchema = z
   })
   .strict()
 
+export const RefreshTokenResSchema = LoginResSchema
+
 export const DeviceSchema = z.object({
   id: z.number(),
   userId: z.number(),
   userAgent: z.string(),
   ip: z.string(),
-  lastActive: z.date(),
-  createdAt: z.date(),
+  lastActive: z.iso.datetime(),
+  createdAt: z.iso.datetime(),
   isActive: z.boolean(),
 })
 
@@ -98,20 +100,23 @@ export const RefreshTokenSchema = z.object({
   token: z.string(),
   userId: z.number(),
   deviceId: z.number(),
-  expiresAt: z.date(),
-  createdAt: z.date(),
+  expiresAt: z.iso.datetime(),
+  createdAt: z.iso.datetime(),
 })
 
 export const RoleSchema = z.object({
   id: z.number(),
   name: z.string(),
   description: z.string(),
+  isActive: z.boolean(),
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
-  deletedAt: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  deletedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
+
+export const LogoutBodySchema = RefreshTokenBodySchema
 
 export const GoogleAuthStateSchema = DeviceSchema.pick({
   userAgent: true,
@@ -124,7 +129,7 @@ export const GetAuthorizationUrlResSchema = z.object({
 
 export const ForgotPasswordBodySchema = z
   .object({
-    email: z.string().email(),
+    email: z.email(),
     code: z.string().length(6),
     newPassword: z.string().min(6).max(100),
     confirmNewPassword: z.string().min(6).max(100),
@@ -145,11 +150,13 @@ export const DisableTwoFactorBodySchema = z
     totpCode: z.string().length(6).optional(),
     code: z.string().length(6).optional(),
   })
+  .strict()
   .superRefine(({ totpCode, code }, ctx) => {
-    const message = 'You have to provide 2FA or OTP.'
+    const message = 'Bạn phải cung cấp mã xác thực 2FA hoặc mã OTP. Không được cung cấp cả 2'
+    // Nếu cả 2 đều có hoặc không có thì sẽ nhảy vào if
     if ((totpCode !== undefined) === (code !== undefined)) {
       ctx.addIssue({
-        path: ['totopCode'],
+        path: ['totpCode'],
         message,
         code: 'custom',
       })
@@ -160,12 +167,10 @@ export const DisableTwoFactorBodySchema = z
       })
     }
   })
-export const TwofactorSetupResSchema = z.object({
+export const TwoFactorSetupResSchema = z.object({
   secret: z.string(),
   uri: z.string(),
 })
-export const LogoutBodySchema = RefreshTokenBodySchema
-export const RefreshTokenResSchema = LoginResSchema
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResType = z.infer<typeof RegisterResSchema>
 export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
@@ -181,4 +186,4 @@ export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
 export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
-export type TwoFactorSetupResType = z.infer<typeof TwofactorSetupResSchema>
+export type TwoFactorSetupResType = z.infer<typeof TwoFactorSetupResSchema>

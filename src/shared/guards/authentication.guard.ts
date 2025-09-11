@@ -8,7 +8,6 @@ import { PaymentAPIKeyGuard } from 'src/shared/guards/payment-api-key.guard'
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
   private readonly authTypeGuardMap: Record<string, CanActivate>
-
   constructor(
     private readonly reflector: Reflector,
     private readonly accessTokenGuard: AccessTokenGuard,
@@ -41,7 +40,7 @@ export class AuthenticationGuard implements CanActivate {
   private async handleOrCondition(guards: CanActivate[], context: ExecutionContext) {
     let lastError: any = null
 
-    // Iterate over guardsm if 1 pass -> return true
+    // Duyệt qua hết các guard, nếu có 1 guard pass thì return true
     for (const guard of guards) {
       try {
         if (await guard.canActivate(context)) {
@@ -59,7 +58,7 @@ export class AuthenticationGuard implements CanActivate {
   }
 
   private async handleAndCondition(guards: CanActivate[], context: ExecutionContext) {
-    // Iterate over guards, if all guard pass -> return true
+    // Duyệt qua hết các guard, nếu mọi guard đều pass thì return true
     for (const guard of guards) {
       try {
         if (!(await guard.canActivate(context))) {

@@ -15,7 +15,7 @@ export class OrderProducer {
         paymentId,
       },
       {
-        delay: 60 * 60 * 24 * 1000, // delay 20s
+        delay: 1000 * 60 * 60 * 24, // delay 24h
         jobId: generateCancelPaymentJobId(paymentId),
         removeOnComplete: true,
         removeOnFail: true,

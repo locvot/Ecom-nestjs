@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CreateRoleBodyType,
   GetRolesQueryType,
   GetRolesResType,
   RoleWithPermissionsType,
   UpdateRoleBodyType,
-} from './role.model'
-import { RoleType } from 'src/shared/models/shared-role.model'
+} from 'src/routes/role/role.model'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { RolePermissionsType, RoleType } from 'src/shared/models/shared-role.model'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class RoleRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -36,10 +38,10 @@ export class RoleRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    }
+    } as any
   }
 
-  async findById(id: number): Promise<RoleWithPermissionsType | null> {
+  findById(id: number): Promise<RoleWithPermissionsType | null> {
     return this.prismaService.role.findUnique({
       where: {
         id,
@@ -52,16 +54,16 @@ export class RoleRepo {
           },
         },
       },
-    })
+    }) as any
   }
 
-  async create({ createdById, data }: { createdById: number | null; data: CreateRoleBodyType }): Promise<RoleType> {
+  create({ createdById, data }: { createdById: number | null; data: CreateRoleBodyType }): Promise<RoleType> {
     return this.prismaService.role.create({
       data: {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
   async update({
@@ -72,8 +74,8 @@ export class RoleRepo {
     id: number
     updatedById: number
     data: UpdateRoleBodyType
-  }): Promise<RoleType> {
-    // Check if any id in permissionId was soft deleted -> no update
+  }): Promise<RolePermissionsType> {
+    // Kiểm tra nếu có bất cứ permissionId nào mà đã soft delete thì không cho phép cập nhật
     if (data.permissionIds.length > 0) {
       const permissions = await this.prismaService.permission.findMany({
         where: {
@@ -84,7 +86,7 @@ export class RoleRepo {
       })
       const deletedPermission = permissions.filter((permission) => permission.deletedAt)
       if (deletedPermission.length > 0) {
-        const deletedIds = deletedPermission.map((permission) => permission.id).join(',')
+        const deletedIds = deletedPermission.map((permission) => permission.id).join(', ')
         throw new Error(`Permission with id has been deleted: ${deletedIds}`)
       }
     }
@@ -110,25 +112,36 @@ export class RoleRepo {
           },
         },
       },
-    })
+    }) as any
   }
 
-  async delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<RoleType> {
-    return isHard
-      ? this.prismaService.role.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.role.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+  delete(
+    {
+      id,
+      deletedById,
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean,
+  ): Promise<RoleType> {
+    return (
+      isHard
+        ? this.prismaService.role.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.role.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

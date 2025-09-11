@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import {
-  CategoryTranslationType,
-  CreateCategoryTranslationBodyType,
   GetCategoryTranslationDetailResType,
+  CreateCategoryTranslationBodyType,
+  CategoryTranslationType,
   UpdateCategoryTranslationBodyType,
-} from './category-translation.model'
+} from 'src/routes/category/category-translation/category-translation.model'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class CategoryTranslationRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -17,7 +19,7 @@ export class CategoryTranslationRepo {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   create({
@@ -32,7 +34,7 @@ export class CategoryTranslationRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
   update({
@@ -53,7 +55,7 @@ export class CategoryTranslationRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
   delete(
@@ -66,21 +68,23 @@ export class CategoryTranslationRepo {
     },
     isHard?: boolean,
   ): Promise<CategoryTranslationType> {
-    return isHard
-      ? this.prismaService.categoryTranslation.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.categoryTranslation.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+    return (
+      isHard
+        ? this.prismaService.categoryTranslation.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.categoryTranslation.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

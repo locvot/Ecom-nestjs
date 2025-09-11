@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../services/prisma.service'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class SharedWebsocketRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -12,7 +14,6 @@ export class SharedWebsocketRepository {
       },
     })
   }
-
   create(data: { id: string; userId: number }) {
     return this.prismaService.websocket.create({
       data: {

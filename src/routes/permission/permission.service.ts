@@ -1,9 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { PermissionRepo } from './permission.repo'
-import { CreatePermissionBodyType, GetPermissionQueryType, UpdatePermissionBodyType } from './permission.model'
+import { PermissionRepo } from 'src/routes/permission/permission.repo'
+import {
+  CreatePermissionBodyType,
+  GetPermissionsQueryType,
+  UpdatePermissionBodyType,
+} from 'src/routes/permission/permission.model'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { PermissionAlreadyExistsException } from './permission.error'
+import { PermissionAlreadyExistsException } from 'src/routes/permission/permission.error'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Cache } from 'cache-manager'
 
@@ -14,17 +18,9 @@ export class PermissionService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  deleteCachedRole(roles: { id: number }[]) {
-    return Promise.all(
-      roles.map((role) => {
-        const cacheKey = `role:${role.id}`
-        return this.cacheManager.del(cacheKey)
-      }),
-    )
-  }
-
-  async list(pagination: GetPermissionQueryType) {
+  async list(pagination: GetPermissionsQueryType) {
     const data = await this.permissionRepo.list(pagination)
+    return data
   }
 
   async findById(id: number) {
@@ -42,14 +38,14 @@ export class PermissionService {
         data,
       })
     } catch (error) {
-      if (!isUniqueConstraintPrismaError(error)) {
+      if (isUniqueConstraintPrismaError(error)) {
         throw PermissionAlreadyExistsException
       }
       throw error
     }
   }
 
-  async update({ data, id, updatedById }: { data: UpdatePermissionBodyType; id: number; updatedById: number }) {
+  async update({ id, data, updatedById }: { id: number; data: UpdatePermissionBodyType; updatedById: number }) {
     try {
       const permission = await this.permissionRepo.update({
         id,
@@ -87,5 +83,14 @@ export class PermissionService {
       }
       throw error
     }
+  }
+
+  deleteCachedRole(roles: { id: number }[]) {
+    return Promise.all(
+      roles.map((role) => {
+        const cacheKey = `role:${role.id}`
+        return this.cacheManager.del(cacheKey)
+      }),
+    )
   }
 }

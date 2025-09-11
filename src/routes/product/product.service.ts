@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { CreateProductBodyType, GetProductsQueryType, UpdateProductBodyType } from './product.model'
-import { ProductRepo } from './product.repo'
-import { I18nContext } from 'nestjs-i18n'
+import { ProductRepo } from 'src/routes/product/product.repo'
+import { GetProductsQueryType } from 'src/routes/product/product.model'
 import { NotFoundRecordException } from 'src/shared/error'
-import { isNotFoundPrismaError } from 'src/shared/helpers'
+import { I18nContext } from 'nestjs-i18n'
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly productRepo: ProductRepo) {}
+  constructor(private productRepo: ProductRepo) {}
 
   async list(props: { query: GetProductsQueryType }) {
     const data = await this.productRepo.list({

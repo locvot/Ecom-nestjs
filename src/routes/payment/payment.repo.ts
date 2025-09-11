@@ -1,15 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { OrderIncludeProductSKUSnapshotType } from 'src/shared/models/shared-order.model'
-import { PrismaService } from 'src/shared/services/prisma.service'
-import { WebhookPaymentBodyType } from './payment.model'
-import { MessageResType } from 'src/shared/models/response.model'
 import { parse } from 'date-fns'
+import { WebhookPaymentBodyType } from 'src/routes/payment/payment.model'
+import { PaymentProducer } from 'src/routes/payment/payment.producer'
+import { OrderStatus } from 'src/shared/constants/order.constant'
 import { PREFIX_PAYMENT_CODE } from 'src/shared/constants/other.constant'
 import { PaymentStatus } from 'src/shared/constants/payment.constant'
-import { OrderStatus } from 'src/shared/constants/order.constant'
-import { PaymentProducer } from './payment.producer'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { MessageResType } from 'src/shared/models/response.model'
+import { OrderIncludeProductSKUSnapshotType } from 'src/shared/models/shared-order.model'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class PaymentRepo {
   constructor(
     private readonly prismaService: PrismaService,
@@ -26,7 +28,8 @@ export class PaymentRepo {
   }
 
   async receiver(body: WebhookPaymentBodyType): Promise<number> {
-    // Add payment detail into db
+    // 1. Thêm thông tin giao dịch vào DB
+    // Tham khảo: https://docs.sepay.vn/lap-trinh-webhooks.html
     let amountIn = 0
     let amountOut = 0
     if (body.transferType === 'in') {
@@ -40,7 +43,7 @@ export class PaymentRepo {
       },
     })
     if (paymentTransaction) {
-      throw new BadRequestException('Transaction already exist')
+      throw new BadRequestException('Transaction already exists')
     }
     const userId = await this.prismaService.$transaction(async (tx) => {
       await tx.paymentTransaction.create({
@@ -85,7 +88,7 @@ export class PaymentRepo {
       }
       const userId = payment.orders[0].userId
       const { orders } = payment
-      const totalPrice = this.getTotalPrice(orders)
+      const totalPrice = this.getTotalPrice(orders as any)
       if (totalPrice !== body.transferAmount) {
         throw new BadRequestException(`Price not match, expected ${totalPrice} but got ${body.transferAmount}`)
       }

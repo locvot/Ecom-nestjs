@@ -7,7 +7,7 @@ import {
   GetReviewsSchema,
   UpdateReviewBodySchema,
   UpdateReviewResSchema,
-} from './review.model'
+} from 'src/routes/review/review.model'
 
 export class GetReviewsDTO extends createZodDto(GetReviewsSchema) {}
 export class CreateReviewBodyDTO extends createZodDto(CreateReviewBodySchema) {}

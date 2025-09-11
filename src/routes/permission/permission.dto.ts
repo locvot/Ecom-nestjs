@@ -2,20 +2,20 @@ import { createZodDto } from 'nestjs-zod'
 import {
   CreatePermissionBodySchema,
   GetPermissionDetailResSchema,
-  GetPermissionParamsScehma,
-  GetPermissionQuerySchema,
-  GetPermissionResSchema,
+  GetPermissionParamsSchema,
+  GetPermissionsQuerySchema,
+  GetPermissionsResSchema,
   UpdatePermissionBodySchema,
-} from './permission.model'
+} from 'src/routes/permission/permission.model'
 
-export class GetPermissionResDTO extends createZodDto(GetPermissionResSchema) {}
+export class GetPermissionsResDTO extends createZodDto(GetPermissionsResSchema) {}
 
-export class GetPermissionQueryDTO extends createZodDto(GetPermissionQuerySchema) {}
+export class GetPermissionParamsDTO extends createZodDto(GetPermissionParamsSchema) {}
 
 export class GetPermissionDetailResDTO extends createZodDto(GetPermissionDetailResSchema) {}
-
-export class GetPermissionParamsDTO extends createZodDto(GetPermissionParamsScehma) {}
 
 export class CreatePermissionBodyDTO extends createZodDto(CreatePermissionBodySchema) {}
 
 export class UpdatePermissionBodyDTO extends createZodDto(UpdatePermissionBodySchema) {}
+
+export class GetPermissionsQueryDTO extends createZodDto(GetPermissionsQuerySchema) {}

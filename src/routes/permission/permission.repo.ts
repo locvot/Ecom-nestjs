@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CreatePermissionBodyType,
-  GetPermissionQueryType,
-  GetPermissionResType,
+  GetPermissionsQueryType,
+  GetPermissionsResType,
   PermissionType,
   UpdatePermissionBodyType,
-} from './permission.model'
+} from 'src/routes/permission/permission.model'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class PermissionRepo {
   constructor(private prismaService: PrismaService) {}
 
-  async list(pagination: GetPermissionQueryType): Promise<GetPermissionResType> {
+  async list(pagination: GetPermissionsQueryType): Promise<GetPermissionsResType> {
     const skip = (pagination.page - 1) * pagination.limit
     const take = pagination.limit
     const [totalItems, data] = await Promise.all([
@@ -25,6 +27,8 @@ export class PermissionRepo {
         where: {
           deletedAt: null,
         },
+        skip,
+        take,
       }),
     ])
     return {
@@ -33,19 +37,19 @@ export class PermissionRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    }
+    } as any
   }
 
-  async findById(id: number): Promise<PermissionType | null> {
+  findById(id: number): Promise<PermissionType | null> {
     return this.prismaService.permission.findUnique({
       where: {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
-  async create({
+  create({
     createdById,
     data,
   }: {
@@ -57,10 +61,10 @@ export class PermissionRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
-  async update({
+  update({
     id,
     updatedById,
     data,
@@ -81,10 +85,10 @@ export class PermissionRepo {
       include: {
         roles: true,
       },
-    })
+    }) as any
   }
 
-  async delete(
+  delete(
     {
       id,
       deletedById,
@@ -94,27 +98,29 @@ export class PermissionRepo {
     },
     isHard?: boolean,
   ): Promise<PermissionType & { roles: { id: number }[] }> {
-    return isHard
-      ? this.prismaService.permission.delete({
-          where: {
-            id,
-          },
-          include: {
-            roles: true,
-          },
-        })
-      : this.prismaService.permission.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-          include: {
-            roles: true,
-          },
-        })
+    return (
+      isHard
+        ? this.prismaService.permission.delete({
+            where: {
+              id,
+            },
+            include: {
+              roles: true,
+            },
+          })
+        : this.prismaService.permission.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+            include: {
+              roles: true,
+            },
+          })
+    ) as any
   }
 }

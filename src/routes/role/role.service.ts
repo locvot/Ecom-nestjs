@@ -1,9 +1,9 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
-import { RoleRepo } from './role.repo'
-import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from './role.model'
+import { RoleRepo } from 'src/routes/role/role.repo'
+import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from 'src/routes/role/role.model'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { ProhibitedActionOnBaseRoleException, RoleAlreadyExistsException } from './role.error'
+import { ProhibitedActionOnBaseRoleException, RoleAlreadyExistsException } from 'src/routes/role/role.error'
 import { RoleName } from 'src/shared/constants/role.constant'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Cache } from 'cache-manager'
@@ -43,6 +43,9 @@ export class RoleService {
     }
   }
 
+  /**
+   * Kiểm tra xem role có phải là 1 trong 3 role cơ bản không
+   */
   private async verifyRole(roleId: number) {
     const role = await this.roleRepo.findById(roleId)
     if (!role) {
@@ -60,10 +63,10 @@ export class RoleService {
       await this.verifyRole(id)
       const updatedRole = await this.roleRepo.update({
         id,
-        data,
         updatedById,
+        data,
       })
-      await this.cacheManager.del(`role:${updatedRole.id}`)
+      await this.cacheManager.del(`role:${updatedRole.id}`) // Xóa cache của role đã cập nhật
       return updatedRole
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
@@ -79,12 +82,11 @@ export class RoleService {
   async delete({ id, deletedById }: { id: number; deletedById: number }) {
     try {
       await this.verifyRole(id)
-
       await this.roleRepo.delete({
         id,
         deletedById,
       })
-      await this.cacheManager.del(`role:${id}`)
+      await this.cacheManager.del(`role:${id}`) // Xóa cache của role đã xóa
       return {
         message: 'Delete successfully',
       }

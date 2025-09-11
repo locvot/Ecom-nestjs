@@ -13,24 +13,23 @@ import {
 } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { Response } from 'express'
+import { ZodResponse } from 'nestjs-zod'
 import path from 'path'
+import { PresignedUploadFileBodyDTO, PresignedUploadFileResDTO, UploadFilesResDTO } from 'src/routes/media/media.dto'
+import { MediaService } from 'src/routes/media/media.service'
+import { ParseFilePipeWithUnlink } from 'src/routes/media/parse-file-pipe-with-unlink.pipe'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
-import { MediaService } from './media.service'
-import { ParseFilePipeWithUnlink } from './parse-file-with-unlink.pipe'
-import { ZodSerializerDto } from 'nestjs-zod'
-import { PresignedUploadFileBodyDTO, PresignedUploadFileResDTO, UploadFilesResDTO } from './media.dto'
 
 @Controller('media')
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
-
   @Post('images/upload')
-  @ZodSerializerDto(UploadFilesResDTO)
+  @ZodResponse({ type: UploadFilesResDTO })
   @UseInterceptors(
     FilesInterceptor('files', 100, {
       limits: {
-        fieldSize: 2 * 1024 * 1024, // 2MB
+        fileSize: 5 * 1024 * 1024, // 1MB
       },
     }),
   )
@@ -38,8 +37,8 @@ export class MediaController {
     @UploadedFiles(
       new ParseFilePipeWithUnlink({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 2 * 1042 * 1042 }), // 2MB
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/, skipMagicNumbersValidation: true }),
+          new MaxFileSizeValidator({ maxSize: 1 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
         ],
       }),
     )
@@ -53,17 +52,17 @@ export class MediaController {
 
   @Get('static/:filename')
   @IsPublic()
-  serverFile(@Param('filename') filename: string, @Res() res: Response) {
+  serveFile(@Param('filename') filename: string, @Res() res: Response) {
     return res.sendFile(path.resolve(UPLOAD_DIR, filename), (error) => {
       if (error) {
-        const notFound = new NotFoundException('File not found')
-        res.status(notFound.getStatus()).json(notFound.getResponse())
+        const notfound = new NotFoundException('File not found')
+        res.status(notfound.getStatus()).json(notfound.getResponse())
       }
     })
   }
 
   @Post('images/upload/presigned-url')
-  @ZodSerializerDto(PresignedUploadFileResDTO)
+  @ZodResponse({ type: PresignedUploadFileResDTO })
   @IsPublic()
   async createPresignedUrl(@Body() body: PresignedUploadFileBodyDTO) {
     return this.mediaService.getPresignUrl(body)

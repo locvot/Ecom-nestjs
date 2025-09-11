@@ -3,9 +3,8 @@ import { AppModule } from 'src/app.module'
 import { HTTPMethod, RoleName } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
-const SellerModule = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 'PROFILE', 'ORDER', 'REVIEW']
-const ClientModule = ['AUTH', 'MEDIA', 'PROFILE', 'CART', 'ORDER', 'REVIEW']
-
+const SellerModule = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 'PROFILE', 'CART', 'ORDERS', 'REVIEWS']
+const ClientModule = ['AUTH', 'MEDIA', 'PROFILE', 'CART', 'ORDERS', 'REVIEWS']
 const prisma = new PrismaService()
 
 async function bootstrap() {
@@ -18,40 +17,40 @@ async function bootstrap() {
       deletedAt: null,
     },
   })
+  const validMethods = Object.keys(HTTPMethod) // ['GET','POST','PUT','DELETE','PATCH']
 
-  const availableRoutes: { path: string; method: keyof typeof HTTPMethod; name: string }[] = router.stack
+  const availableRoutes = router.stack
     .map((layer) => {
       if (layer.route) {
-        const path = layer.route?.path
-        const method = String(layer.route?.stack[0].method).toUpperCase() as keyof typeof HTTPMethod
+        const path = layer.route.path
+        const method = String(layer.route.stack[0].method).toUpperCase()
+        if (!validMethods.includes(method)) return undefined // bỏ qua ACL, ALL
         const moduleName = String(path.split('/')[1]).toUpperCase()
         return {
           path,
-          method,
+          method: method as keyof typeof HTTPMethod,
           name: method + ' ' + path,
           module: moduleName,
         }
       }
     })
     .filter((item) => item !== undefined)
-
-  // Create object permissionInDbMap with key [method-path]
+  // Tạo object permissionInDbMap với key là [method-path]
   const permissionInDbMap: Record<string, (typeof permissionsInDb)[0]> = permissionsInDb.reduce((acc, item) => {
     acc[`${item.method}-${item.path}`] = item
     return acc
   }, {})
-
-  // Create object availableRoutesMap with key [method-path]
+  // Tạo object availableRoutesMap với key là [method-path]
   const availableRoutesMap: Record<string, (typeof availableRoutes)[0]> = availableRoutes.reduce((acc, item) => {
     acc[`${item.method}-${item.path}`] = item
     return acc
   }, {})
 
+  // Tìm permissions trong database mà không tồn tại trong availableRoutes
   const permissionsToDelete = permissionsInDb.filter((item) => {
     return !availableRoutesMap[`${item.method}-${item.path}`]
   })
-
-  // Delete permissions not exist in availableRoutes
+  // Xóa permissions không tồn tại trong availableRoutes
   if (permissionsToDelete.length > 0) {
     const deleteResult = await prisma.permission.deleteMany({
       where: {
@@ -64,13 +63,11 @@ async function bootstrap() {
   } else {
     console.log('No permissions to delete')
   }
-
-  //Find routes which not exist in permissionsInDb
+  // Tìm routes mà không tồn tại trong permissionsInDb
   const routesToAdd = availableRoutes.filter((item) => {
     return !permissionInDbMap[`${item.method}-${item.path}`]
   })
-
-  // Add routes as permissions database
+  // Thêm các routes này dưới dạng permissions database
   if (routesToAdd.length > 0) {
     const permissionsToAdd = await prisma.permission.createMany({
       data: routesToAdd,
@@ -81,19 +78,16 @@ async function bootstrap() {
     console.log('No permissions to add')
   }
 
-  // Get permission in db after insert or delete
+  // Lấy lại permissions trong database sau khi thêm mới (hoặc bị xóa)
   const updatedPermissionsInDb = await prisma.permission.findMany({
     where: {
       deletedAt: null,
     },
   })
-
   const adminPermissionIds = updatedPermissionsInDb.map((item) => ({ id: item.id }))
-
   const sellerPermissionIds = updatedPermissionsInDb
     .filter((item) => SellerModule.includes(item.module))
     .map((item) => ({ id: item.id }))
-
   const clientPermissionIds = updatedPermissionsInDb
     .filter((item) => ClientModule.includes(item.module))
     .map((item) => ({ id: item.id }))
@@ -125,5 +119,4 @@ const updateRole = async (permissionIds: { id: number }[], roleName: string) => 
     },
   })
 }
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap()

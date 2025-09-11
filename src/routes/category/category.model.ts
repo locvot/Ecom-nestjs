@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import { CategoryIncludeTranslationSchema, CategorySchema } from 'src/shared/models/shared-category.model'
+import { z } from 'zod'
 
 export const GetAllCategoriesResSchema = z.object({
   data: z.array(CategorySchema),

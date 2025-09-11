@@ -1,12 +1,12 @@
-import { z } from 'zod'
 import { BrandIncludeTranslationSchema, BrandSchema } from 'src/shared/models/shared-brand.model'
+import { z } from 'zod'
 
 export const GetBrandsResSchema = z.object({
   data: z.array(BrandIncludeTranslationSchema),
   totalItems: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number(),
+  page: z.number(), // Số trang hiện tại
+  limit: z.number(), // Số item trên 1 trang
+  totalPages: z.number(), // Tổng số trang
 })
 
 export const GetBrandParamsSchema = z

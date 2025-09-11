@@ -1,11 +1,11 @@
-import { z } from 'zod'
-import { UpsertSKUBodySchema } from './sku.model'
-import { CategoryIncludeTranslationSchema } from 'src/shared/models/shared-category.model'
-import { BrandIncludeTranslationSchema } from 'src/shared/models/shared-brand.model'
+import { UpsertSKUBodySchema } from 'src/routes/product/sku.model'
 import { OrderBy, SortBy } from 'src/shared/constants/other.constant'
+import { BrandIncludeTranslationSchema } from 'src/shared/models/shared-brand.model'
+import { CategoryIncludeTranslationSchema } from 'src/shared/models/shared-category.model'
+import { ProductTranslationSchema } from 'src/shared/models/shared-product-translation.model'
 import { ProductSchema, VariantsType } from 'src/shared/models/shared-product.model'
 import { SKUSchema } from 'src/shared/models/shared-sku.model'
-import { ProductTranslationSchema } from 'src/shared/models/shared-product-translation.model'
+import { z } from 'zod'
 
 function generateSKUs(variants: VariantsType) {
   // Hàm hỗ trợ để tạo tất cả tổ hợp
@@ -29,25 +29,28 @@ function generateSKUs(variants: VariantsType) {
 }
 
 /**
- * For Client and Guest
+ * Dành cho client và guest
  */
-
 export const GetProductsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().default(10),
   name: z.string().optional(),
-  brandIds: z.preprocess((value) => {
-    if (typeof value === 'string') {
-      return [Number(value)]
-    }
-    return value
-  }, z.array(z.coerce.number().int().positive()).optional()),
-  categories: z.preprocess((value) => {
-    if (typeof value === 'string') {
-      return [Number(value)]
-    }
-    return value
-  }, z.array(z.coerce.number().int().positive()).optional()),
+  brandIds: z
+    .preprocess((value) => {
+      if (typeof value === 'string') {
+        return [Number(value)]
+      }
+      return value
+    }, z.array(z.coerce.number().int().positive()))
+    .optional(),
+  categories: z
+    .preprocess((value) => {
+      if (typeof value === 'string') {
+        return [Number(value)]
+      }
+      return value
+    }, z.array(z.coerce.number().int().positive()))
+    .optional(),
   minPrice: z.coerce.number().positive().optional(),
   maxPrice: z.coerce.number().positive().optional(),
   createdById: z.coerce.number().int().positive().optional(),
@@ -56,10 +59,10 @@ export const GetProductsQuerySchema = z.object({
 })
 
 /**
- * For Admin and Seller
+ * Dành cho Admin và Seller
  */
 export const GetManageProductsQuerySchema = GetProductsQuerySchema.extend({
-  IsPublic: z.preprocess((value) => value === 'true', z.boolean()).optional(),
+  isPublic: z.preprocess((value) => value === 'true', z.boolean()).optional(),
   createdById: z.coerce.number().int().positive(),
 })
 

@@ -1,23 +1,26 @@
 import { Injectable } from '@nestjs/common'
-import { CategoryRepo } from './category.repo'
-import { I18nContext } from 'nestjs-i18n'
-import { CreateCategoryBodyType, UpdateCategoryBodyType } from './category.model'
+import { CategoryRepo } from 'src/routes/category/category.repo'
+import { CreateCategoryBodyType, UpdateCategoryBodyType } from 'src/routes/category/category.model'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
+import { I18nContext } from 'nestjs-i18n'
 
 @Injectable()
 export class CategoryService {
   constructor(private categoryRepo: CategoryRepo) {}
 
-  list(parentCategoryId?: number | null) {
-    return this.categoryRepo.list({
+  findAll(parentCategoryId?: number | null) {
+    return this.categoryRepo.findAll({
       parentCategoryId,
       languageId: I18nContext.current()?.lang as string,
     })
   }
 
   async findById(id: number) {
-    const category = await this.categoryRepo.findById({ id, languageId: I18nContext.current()?.lang as string })
+    const category = await this.categoryRepo.findById({
+      id,
+      languageId: I18nContext.current()?.lang as string,
+    })
     if (!category) {
       throw NotFoundRecordException
     }

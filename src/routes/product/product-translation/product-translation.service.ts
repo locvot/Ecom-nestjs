@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { ProductTranslationRepo } from './product-translation.repo'
 import { NotFoundRecordException } from 'src/shared/error'
-import { CreateProductTranslationBodyType, UpdateProductTranslationBodyType } from './product-translation.model'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { ProductTranslationAlreadyExistException } from './product-translation.error'
+import { ProductTranslationRepo } from 'src/routes/product/product-translation/product-translation.repo'
+import { ProductTranslationAlreadyExistsException } from 'src/routes/product/product-translation/product-translation.error'
+import {
+  CreateProductTranslationBodyType,
+  UpdateProductTranslationBodyType,
+} from 'src/routes/product/product-translation/product-translation.model'
 
 @Injectable()
 export class ProductTranslationService {
@@ -19,22 +22,29 @@ export class ProductTranslationService {
 
   async create({ data, createdById }: { data: CreateProductTranslationBodyType; createdById: number }) {
     try {
-      return await this.productTranslationRepo.create({ data, createdById })
+      return await this.productTranslationRepo.create({
+        createdById,
+        data,
+      })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw ProductTranslationAlreadyExistException
+        throw ProductTranslationAlreadyExistsException
       }
       throw error
     }
   }
 
-  async update({ id, data, updatedById }: { id: number; updatedById: number; data: UpdateProductTranslationBodyType }) {
+  async update({ id, data, updatedById }: { id: number; data: UpdateProductTranslationBodyType; updatedById: number }) {
     try {
-      const product = await this.productTranslationRepo.update({ id, data, updatedById })
+      const product = await this.productTranslationRepo.update({
+        id,
+        updatedById,
+        data,
+      })
       return product
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw ProductTranslationAlreadyExistException
+        throw ProductTranslationAlreadyExistsException
       }
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException
@@ -49,7 +59,9 @@ export class ProductTranslationService {
         id,
         deletedById,
       })
-      return { message: 'Delete successfully' }
+      return {
+        message: 'Delete successfully',
+      }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException

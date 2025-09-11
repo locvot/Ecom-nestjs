@@ -1,4 +1,5 @@
 import { createZodDto } from 'nestjs-zod'
+
 import { ChangePasswordBodySchema, UpdateMeBodySchema } from './profile.model'
 
 export class UpdateMeBodyDTO extends createZodDto(UpdateMeBodySchema) {}

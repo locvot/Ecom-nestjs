@@ -4,7 +4,7 @@ import {
   GetCategoryTranslationDetailResSchema,
   GetCategoryTranslationParamsSchema,
   UpdateCategoryTranslationBodySchema,
-} from './category-translation.model'
+} from 'src/routes/category/category-translation/category-translation.model'
 
 export class GetCategoryTranslationDetailResDTO extends createZodDto(GetCategoryTranslationDetailResSchema) {}
 export class GetCategoryTranslationParamsDTO extends createZodDto(GetCategoryTranslationParamsSchema) {}

@@ -1,8 +1,7 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common'
-import { OrderService } from './order.service'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
 import {
-  cancelOrderBodyDTO,
+  CancelOrderBodyDTO,
   CancelOrderResDTO,
   CreateOrderBodyDTO,
   CreateOrderResDTO,
@@ -10,34 +9,35 @@ import {
   GetOrderListQueryDTO,
   GetOrderListResDTO,
   GetOrderParamsDTO,
-} from './order.dto'
+} from 'src/routes/order/order.dto'
+import { OrderService } from 'src/routes/order/order.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 
-@Controller('order')
+@Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  @ZodSerializerDto(GetOrderListResDTO)
+  @ZodResponse({ type: GetOrderListResDTO })
   getCart(@ActiveUser('userId') userId: number, @Query() query: GetOrderListQueryDTO) {
     return this.orderService.list(userId, query)
   }
 
   @Post()
-  @ZodSerializerDto(CreateOrderResDTO)
+  @ZodResponse({ type: CreateOrderResDTO })
   create(@ActiveUser('userId') userId: number, @Body() body: CreateOrderBodyDTO) {
     return this.orderService.create(userId, body)
   }
 
   @Get(':orderId')
-  @ZodSerializerDto(GetOrderDetailResDTO)
-  detail(@ActiveUser('userId') userId: number, @Param() params: GetOrderParamsDTO) {
-    return this.orderService.detail(userId, params.orderId)
+  @ZodResponse({ type: GetOrderDetailResDTO })
+  detail(@ActiveUser('userId') userId: number, @Param() param: GetOrderParamsDTO) {
+    return this.orderService.detail(userId, param.orderId)
   }
 
   @Put(':orderId')
-  @ZodSerializerDto(CancelOrderResDTO)
-  cancel(@ActiveUser('userId') userId: number, @Param() params: GetOrderParamsDTO, @Body() _: cancelOrderBodyDTO) {
-    return this.orderService.detail(userId, params.orderId)
+  @ZodResponse({ type: CancelOrderResDTO })
+  cancel(@ActiveUser('userId') userId: number, @Param() param: GetOrderParamsDTO, @Body() _: CancelOrderBodyDTO) {
+    return this.orderService.cancel(userId, param.orderId)
   }
 }

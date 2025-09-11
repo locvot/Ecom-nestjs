@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { BrandTranslationRepo } from './brand-translation.repo'
 import { NotFoundRecordException } from 'src/shared/error'
-import { CreateBrandTranslationBodyType, UpdateBrandTranslationBodyType } from './brand-translation.model'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { BrandTranslationAlreadyExistsException } from './brand-translation.error'
+import { BrandTranslationRepo } from 'src/routes/brand/brand-translation/brand-translation.repo'
+import { BrandTranslationAlreadyExistsException } from 'src/routes/brand/brand-translation/brand-translation.error'
+import {
+  CreateBrandTranslationBodyType,
+  UpdateBrandTranslationBodyType,
+} from 'src/routes/brand/brand-translation/brand-translation.model'
 
 @Injectable()
 export class BrandTranslationService {
@@ -56,6 +59,9 @@ export class BrandTranslationService {
         id,
         deletedById,
       })
+      return {
+        message: 'Delete successfully',
+      }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException

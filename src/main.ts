@@ -1,23 +1,21 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { WebscoketAdapter } from './websockets/websocket.adapter'
+import { WebsocketAdapter } from 'src/websockets/websocket.adapter'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
-import { patchNestJsSwagger } from 'nestjs-zod'
+import { cleanupOpenApiDoc } from 'nestjs-zod'
 import helmet from 'helmet'
-// import { LoggingInterceptor } from './shared/interceptor/logging.interceptor'
+// import { LoggingInterceptor } from 'src/shared/interceptor/logging.interceptor'
 import { Logger } from 'nestjs-pino'
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bufferLogs: true,
-  })
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true })
   app.useLogger(app.get(Logger))
-  app.set('trust proxy', 'loopback')
+  app.set('trust proxy', 'loopback') // Trust requests from the loopback address
   app.enableCors()
   app.use(helmet())
   // app.useGlobalInterceptors(new LoggingInterceptor())
-  patchNestJsSwagger()
+
   const config = new DocumentBuilder()
     .setTitle('Ecommerce API')
     .setDescription('The API for the ecommerce application')
@@ -31,16 +29,17 @@ async function bootstrap() {
       'payment-api-key',
     )
     .build()
-  const documentFactory = () => SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api', app, documentFactory, {
+  const documentFactory = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('api', app, cleanupOpenApiDoc(documentFactory), {
     swaggerOptions: {
       persistAuthorization: true,
     },
   })
 
-  const websocketAdapter = new WebscoketAdapter(app)
+  const websocketAdapter = new WebsocketAdapter(app)
   await websocketAdapter.connectToRedis()
   app.useWebSocketAdapter(websocketAdapter)
+
   await app.listen(process.env.PORT ?? 3000)
 }
 bootstrap()

@@ -1,6 +1,6 @@
-import { RoleSchema } from 'src/shared/models/shared-role.model'
-import { UserSchema } from 'src/shared/models/shared-user.model'
 import { z } from 'zod'
+import { UserSchema } from 'src/shared/models/shared-user.model'
+import { RoleSchema } from 'src/shared/models/shared-role.model'
 
 export const GetUsersResSchema = z.object({
   data: z.array(

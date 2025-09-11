@@ -1,5 +1,5 @@
+import { OrderStatus } from 'src/shared/constants/order.constant'
 import { z } from 'zod'
-import { OrderStatus } from '../constants/order.constant'
 
 export const OrderStatusSchema = z.enum([
   OrderStatus.PENDING_PAYMENT,
@@ -25,9 +25,9 @@ export const OrderSchema = z.object({
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
   deletedById: z.number().nullable(),
-  deletedAt: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  deletedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
 export const ProductSKUSnapshotSchema = z.object({
@@ -49,7 +49,7 @@ export const ProductSKUSnapshotSchema = z.object({
   orderId: z.number().nullable(),
   quantity: z.number(),
 
-  createdAt: z.date(),
+  createdAt: z.iso.datetime(),
 })
 
 export const OrderIncludeProductSKUSnapshotSchema = OrderSchema.extend({

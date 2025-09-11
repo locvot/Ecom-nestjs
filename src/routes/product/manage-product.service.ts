@@ -1,10 +1,15 @@
 import { ForbiddenException, Injectable } from '@nestjs/common'
-import { ProductRepo } from './product.repo'
-import { RoleName } from 'src/shared/constants/role.constant'
-import { CreateProductBodyType, GetManageProductsQueryType, UpdateProductBodyType } from './product.model'
-import { I18nContext } from 'nestjs-i18n'
+import { ProductRepo } from 'src/routes/product/product.repo'
+import {
+  CreateProductBodyType,
+  GetManageProductsQueryType,
+  GetProductsQueryType,
+  UpdateProductBodyType,
+} from 'src/routes/product/product.model'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
+import { I18nContext } from 'nestjs-i18n'
+import { RoleName } from 'src/shared/constants/role.constant'
 
 @Injectable()
 export class ManageProductService {
@@ -42,7 +47,7 @@ export class ManageProductService {
       limit: props.query.limit,
       languageId: I18nContext.current()?.lang as string,
       createdById: props.query.createdById,
-      isPublic: props.query.IsPublic,
+      isPublic: props.query.isPublic,
       brandIds: props.query.brandIds,
       minPrice: props.query.minPrice,
       maxPrice: props.query.maxPrice,

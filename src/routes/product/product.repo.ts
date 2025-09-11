@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
+import { Prisma } from '@prisma/client'
 import {
   CreateProductBodyType,
   GetProductDetailResType,
   GetProductsResType,
   UpdateProductBodyType,
-} from './product.model'
+} from 'src/routes/product/product.model'
 import { ALL_LANGUAGE_CODE, OrderByType, SortBy, SortByType } from 'src/shared/constants/other.constant'
-import { Prisma } from '@prisma/client'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
 import { ProductType } from 'src/shared/models/shared-product.model'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class ProductRepo {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -84,7 +86,7 @@ export class ProductRepo {
         lte: maxPrice,
       }
     }
-    // Default sort: createdAt Desc
+    // Mặc định sort theo createdAt mới nhất
     let caculatedOrderBy: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] = {
       createdAt: orderBy,
     }
@@ -127,58 +129,7 @@ export class ProductRepo {
       page: page,
       limit: limit,
       totalPages: Math.ceil(totalItems / limit),
-    }
-  }
-
-  create({
-    createdById,
-    data,
-  }: {
-    createdById: number
-    data: CreateProductBodyType
-  }): Promise<GetProductDetailResType> {
-    const { skus, categories, ...productData } = data
-    return this.prismaService.product.create({
-      data: {
-        createdById,
-        ...productData,
-        // Categories are created before
-        categories: {
-          connect: categories.map((category) => ({ id: category })),
-        },
-        skus: {
-          createMany: {
-            data: skus.map((sku) => ({
-              ...sku,
-              createdById,
-            })),
-          },
-        },
-      },
-      include: {
-        productTranslations: {
-          where: { deletedAt: null },
-        },
-        skus: {
-          where: { deletedAt: null },
-        },
-        brand: {
-          include: {
-            brandTranslations: {
-              where: { deletedAt: null },
-            },
-          },
-        },
-        categories: {
-          where: { deletedAt: null },
-          include: {
-            categoryTranslations: {
-              where: { deletedAt: null },
-            },
-          },
-        },
-      },
-    })
+    } as any
   }
 
   findById(productId: number): Promise<ProductType | null> {
@@ -187,7 +138,7 @@ export class ProductRepo {
         id: productId,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   getDetail({
@@ -243,7 +194,59 @@ export class ProductRepo {
           },
         },
       },
-    })
+    }) as any
+  }
+
+  create({
+    createdById,
+    data,
+  }: {
+    createdById: number
+    data: CreateProductBodyType
+  }): Promise<GetProductDetailResType> {
+    const { skus, categories, ...productData } = data
+    return this.prismaService.product.create({
+      data: {
+        createdById,
+        ...productData,
+        categories: {
+          connect: categories.map((category) => ({ id: category })),
+        },
+        skus: {
+          createMany: {
+            data: skus.map((sku) => ({
+              ...sku,
+              createdById,
+            })),
+          },
+        },
+      },
+      include: {
+        productTranslations: {
+          where: { deletedAt: null },
+        },
+        skus: {
+          where: { deletedAt: null },
+        },
+        brand: {
+          include: {
+            brandTranslations: {
+              where: { deletedAt: null },
+            },
+          },
+        },
+        categories: {
+          where: {
+            deletedAt: null,
+          },
+          include: {
+            categoryTranslations: {
+              where: { deletedAt: null },
+            },
+          },
+        },
+      },
+    }) as any
   }
 
   async update({
@@ -256,11 +259,11 @@ export class ProductRepo {
     data: UpdateProductBodyType
   }): Promise<ProductType> {
     const { skus: dataSkus, categories, ...productData } = data
-    // Sku existed in Db but not in data payload -> delete
-    // SKu existed in db but in data payload -> update
-    // SKU dont exist in db but in data payload -> create
+    // SKU đã tồn tại trong DB nhưng không có trong data payload thì sẽ bị xóa
+    // SKU đã tồn tại trong DB nhưng có trong data payload thì sẽ được cập nhật
+    // SKY không tồn tại trong DB nhưng có trong data payload thì sẽ được thêm mới
 
-    // 1. Get sku list in db
+    // 1. Lấy danh sách SKU hiện tại trong DB
     const existingSKUs = await this.prismaService.sKU.findMany({
       where: {
         productId: id,
@@ -268,11 +271,11 @@ export class ProductRepo {
       },
     })
 
-    // 2. Find Skus to delete
-    const skusToDelete = existingSKUs.filter((sku) => dataSkus.every((dataSkus) => dataSkus.value !== sku.value))
+    // 2. Tìm các SKUs cần xóa (tồn tại trong DB nhưng không có trong data payload)
+    const skusToDelete = existingSKUs.filter((sku) => dataSkus.every((dataSku) => dataSku.value !== sku.value))
     const skuIdsToDelete = skusToDelete.map((sku) => sku.id)
 
-    // 3. Mapping id to data payload
+    // 3. Mapping ID vào trong data payload
     const skusWithId = dataSkus.map((dataSku) => {
       const existingSku = existingSKUs.find((existingSKU) => existingSKU.value === dataSku.value)
       return {
@@ -281,10 +284,10 @@ export class ProductRepo {
       }
     })
 
-    // 4. Find skus to update
+    // 4. Tìm các skus để cập nhật
     const skusToUpdate = skusWithId.filter((sku) => sku.id !== null)
 
-    // 5. Find skus to create
+    // 5. Tìm các skus để thêm mới
     const skusToCreate = skusWithId
       .filter((sku) => sku.id === null)
       .map((sku) => {
@@ -296,7 +299,7 @@ export class ProductRepo {
         }
       })
     const [product] = await this.prismaService.$transaction([
-      //Update product
+      // Cập nhật Product
       this.prismaService.product.update({
         where: {
           id,
@@ -306,11 +309,11 @@ export class ProductRepo {
           ...productData,
           updatedById,
           categories: {
-            connect: categories.map((category) => ({ id })),
+            connect: categories.map((category) => ({ id: category })),
           },
         },
       }),
-      // Soft delete skus not in data payload
+      // Xóa mềm các SKU không có trong data payload
       this.prismaService.sKU.updateMany({
         where: {
           id: {
@@ -322,22 +325,46 @@ export class ProductRepo {
           deletedById: updatedById,
         },
       }),
-      // Create new sku not in db
+      // Cập nhật các SKU có trong data payload
+      ...skusToUpdate.map((sku) =>
+        this.prismaService.sKU.update({
+          where: {
+            id: sku.id as number,
+          },
+          data: {
+            value: sku.value,
+            price: sku.price,
+            stock: sku.stock,
+            image: sku.image,
+            updatedById,
+          },
+        }),
+      ),
+      // Thêm mới các SKU không có trong DB
       this.prismaService.sKU.createMany({
         data: skusToCreate,
       }),
     ])
 
-    return product
+    return product as any
   }
 
-  async delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<ProductType> {
+  async delete(
+    {
+      id,
+      deletedById,
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean,
+  ): Promise<ProductType> {
     if (isHard) {
       return this.prismaService.product.delete({
         where: {
           id,
         },
-      })
+      }) as any
     }
     const now = new Date()
     const [product] = await Promise.all([
@@ -368,9 +395,10 @@ export class ProductRepo {
         },
         data: {
           deletedAt: now,
+          deletedById,
         },
       }),
     ])
-    return product
+    return product as any
   }
 }

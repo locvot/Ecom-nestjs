@@ -6,14 +6,14 @@ export const VariantSchema = z.object({
 })
 
 export const VariantsSchema = z.array(VariantSchema).superRefine((variants, ctx) => {
-  // Check variants and variants option
+  // Kiểm tra variants và variant option có bị trùng hay không
   for (let i = 0; i < variants.length; i++) {
     const variant = variants[i]
     const isExistingVariant = variants.findIndex((v) => v.value.toLowerCase() === variant.value.toLowerCase()) !== i
     if (isExistingVariant) {
       return ctx.addIssue({
         code: 'custom',
-        message: `Variant ${variant.value} has existed in variants list. Check again please.`,
+        message: `Giá trị ${variant.value} đã tồn tại trong danh sách variants. Vui lòng kiểm tra lại.`,
         path: ['variants'],
       })
     }
@@ -24,7 +24,7 @@ export const VariantsSchema = z.array(VariantSchema).superRefine((variants, ctx)
     if (isDifferentOption) {
       return ctx.addIssue({
         code: 'custom',
-        message: `Variant ${variant.value} have duplicated options. Check again please.`,
+        message: `Variant ${variant.value} chứa các option trùng tên với nhau. Vui lòng kiểm tra lại.`,
         path: ['variants'],
       })
     }
@@ -33,7 +33,7 @@ export const VariantsSchema = z.array(VariantSchema).superRefine((variants, ctx)
 
 export const ProductSchema = z.object({
   id: z.number(),
-  publishedAt: z.coerce.date().nullable(),
+  publishedAt: z.iso.datetime().nullable(),
   name: z.string().trim().max(500),
   basePrice: z.number().min(0),
   virtualPrice: z.number().min(0),
@@ -44,9 +44,9 @@ export const ProductSchema = z.object({
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
   deletedById: z.number().nullable(),
-  deletedAt: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  deletedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
 export type ProductType = z.infer<typeof ProductSchema>

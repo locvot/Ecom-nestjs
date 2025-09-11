@@ -11,8 +11,8 @@ import {
   RegisterBodySchema,
   RegisterResSchema,
   SendOTPBodySchema,
-  TwofactorSetupResSchema,
-} from './auth.model'
+  TwoFactorSetupResSchema,
+} from 'src/routes/auth/auth.model'
 
 export class RegisterBodyDTO extends createZodDto(RegisterBodySchema) {}
 
@@ -34,6 +34,6 @@ export class GetAuthorizationUrlResDTO extends createZodDto(GetAuthorizationUrlR
 
 export class ForgotPasswordBodyDTO extends createZodDto(ForgotPasswordBodySchema) {}
 
-export class TwoFactorSetupResDTO extends createZodDto(TwofactorSetupResSchema) {}
+export class TwoFactorSetupResDTO extends createZodDto(TwoFactorSetupResSchema) {}
 
 export class DisableTwoFactorBodyDTO extends createZodDto(DisableTwoFactorBodySchema) {}

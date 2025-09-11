@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
-import { OrderController } from './order.controller'
 import { OrderService } from './order.service'
 import { OrderRepo } from './order.repo'
+import { OrderController } from 'src/routes/order/order.controller'
 import { BullModule } from '@nestjs/bullmq'
 import { PAYMENT_QUEUE_NAME } from 'src/shared/constants/queue.constant'
-import { OrderProducer } from './order.producer'
+import { OrderProducer } from 'src/routes/order/order.producer'
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import { OrderProducer } from './order.producer'
       name: PAYMENT_QUEUE_NAME,
     }),
   ],
-  controllers: [OrderController],
   providers: [OrderService, OrderRepo, OrderProducer],
+  controllers: [OrderController],
 })
 export class OrderModule {}

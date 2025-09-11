@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
-import { MediaController } from './media.controller'
-import { MediaService } from './media.service'
-import multer from 'multer'
-import { generateRandomFilename } from 'src/shared/helpers'
 import { MulterModule } from '@nestjs/platform-express'
 import { existsSync, mkdirSync } from 'fs'
+import multer from 'multer'
+import { MediaController } from 'src/routes/media/media.controller'
+import { MediaService } from 'src/routes/media/media.service'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
+import { generateRandomFilename } from 'src/shared/helpers'
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -18,9 +18,13 @@ const storage = multer.diskStorage({
 })
 
 @Module({
-  imports: [MulterModule.register({ storage })],
-  controllers: [MediaController],
   providers: [MediaService],
+  imports: [
+    MulterModule.register({
+      storage,
+    }),
+  ],
+  controllers: [MediaController],
 })
 export class MediaModule {
   constructor() {

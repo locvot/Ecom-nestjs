@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import {
-  CreateProductTranslationBodyType,
   GetProductTranslationDetailResType,
+  CreateProductTranslationBodyType,
   UpdateProductTranslationBodyType,
-} from './product-translation.model'
+} from 'src/routes/product/product-translation/product-translation.model'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
 import { ProductTranslationType } from 'src/shared/models/shared-product-translation.model'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class ProductTranslationRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -17,7 +19,7 @@ export class ProductTranslationRepo {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   create({
@@ -32,7 +34,7 @@ export class ProductTranslationRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
   update({
@@ -53,25 +55,36 @@ export class ProductTranslationRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
-  delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<ProductTranslationType> {
-    return isHard
-      ? this.prismaService.productTranslation.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.productTranslation.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+  delete(
+    {
+      id,
+      deletedById,
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean,
+  ): Promise<ProductTranslationType> {
+    return (
+      isHard
+        ? this.prismaService.productTranslation.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.productTranslation.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

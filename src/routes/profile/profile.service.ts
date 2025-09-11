@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { InvalidPasswordException, NotFoundRecordException } from 'src/shared/error'
+import { ChangePasswordBodyType, UpdateMeBodySchema, UpdateMeBodyType } from './profile.model'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
-import { ChangePasswordBodyType, UpdateMeBodyType } from './profile.model'
-import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
+import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
 
 @Injectable()
 export class ProfileService {
@@ -20,15 +20,14 @@ export class ProfileService {
     if (!user) {
       throw NotFoundRecordException
     }
+
     return user
   }
 
   async updateProfile({ userId, body }: { userId: number; body: UpdateMeBodyType }) {
     try {
       return await this.sharedUserRepository.update(
-        {
-          id: userId,
-        },
+        { id: userId },
         {
           ...body,
           updatedById: userId,
@@ -64,7 +63,6 @@ export class ProfileService {
           updatedById: userId,
         },
       )
-
       return {
         message: 'Password changed successfully',
       }

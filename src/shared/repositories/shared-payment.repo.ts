@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../services/prisma.service'
-import { OrderStatus } from '../constants/order.constant'
-import { PaymentStatus } from '../constants/payment.constant'
+import { OrderStatus } from '@prisma/client'
+import { PaymentStatus } from 'src/shared/constants/payment.constant'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class SharedPaymentRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -14,7 +16,9 @@ export class SharedPaymentRepository {
       },
       include: {
         orders: {
-          include: { items: true },
+          include: {
+            items: true,
+          },
         },
       },
     })
@@ -22,30 +26,36 @@ export class SharedPaymentRepository {
       throw Error('Payment not found')
     }
     const { orders } = payment
-    const productSKUSnapshot = orders.map((order) => order.items).flat()
+    const productSKUSnapshots = orders.map((order) => order.items).flat()
     await this.prismaService.$transaction(async (tx) => {
       const updateOrder$ = tx.order.updateMany({
         where: {
           id: {
             in: orders.map((order) => order.id),
           },
+          status: OrderStatus.PENDING_PAYMENT,
+          deletedAt: null,
         },
         data: {
           status: OrderStatus.CANCELLED,
         },
       })
 
-      const updateSku$ = (await Promise.all(productSKUSnapshot.filter((item) => item.skuId))).map((item) =>
-        tx.sKU.update({
-          where: {
-            id: item.skuId as number,
-          },
-          data: {
-            stock: {
-              increment: item.quantity,
-            },
-          },
-        }),
+      const updateSkus$ = Promise.all(
+        productSKUSnapshots
+          .filter((item) => item.skuId)
+          .map((item) =>
+            tx.sKU.update({
+              where: {
+                id: item.skuId as number,
+              },
+              data: {
+                stock: {
+                  increment: item.quantity,
+                },
+              },
+            }),
+          ),
       )
 
       const updatePayment$ = tx.payment.update({
@@ -56,7 +66,7 @@ export class SharedPaymentRepository {
           status: PaymentStatus.FAILED,
         },
       })
-      return await Promise.all([updateOrder$, updateSku$, updatePayment$])
+      return await Promise.all([updateOrder$, updateSkus$, updatePayment$])
     })
   }
 }

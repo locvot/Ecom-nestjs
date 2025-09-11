@@ -1,12 +1,12 @@
 import { createZodDto } from 'nestjs-zod'
 import {
   CreateCategoryBodySchema,
-  GetAllCategoriesQuerySchema,
-  GetAllCategoriesResSchema,
   GetCategoryDetailResSchema,
   GetCategoryParamsSchema,
+  GetAllCategoriesResSchema,
   UpdateCategoryBodySchema,
-} from './category.model'
+  GetAllCategoriesQuerySchema,
+} from 'src/routes/category/category.model'
 
 export class GetAllCategoriesResDTO extends createZodDto(GetAllCategoriesResSchema) {}
 

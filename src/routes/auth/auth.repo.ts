@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
-import { DeviceType, RefreshTokenType, RegisterBodyType, VerificationCodeType } from './auth.model'
-import { UserType } from 'src/shared/models/shared-user.model'
+import { DeviceType, RefreshTokenType, VerificationCodeType } from 'src/routes/auth/auth.model'
 import { TypeOfVerificationCodeType } from 'src/shared/constants/auth.constant'
-import { WhereUniqueUserType } from 'src/shared/repositories/shared-user.repo'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
 import { RoleType } from 'src/shared/models/shared-role.model'
+import { UserType } from 'src/shared/models/shared-user.model'
+import { WhereUniqueUserType } from 'src/shared/repositories/shared-user.repo'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class AuthRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createUser(
+  createUser(
     user: Pick<UserType, 'email' | 'name' | 'password' | 'phoneNumber' | 'roleId'>,
   ): Promise<Omit<UserType, 'password' | 'totpSecret'>> {
     return this.prismaService.user.create({
@@ -19,10 +21,10 @@ export class AuthRepository {
         password: true,
         totpSecret: true,
       },
-    })
+    }) as any
   }
 
-  async createUserIncludeRole(
+  createUserInclueRole(
     user: Pick<UserType, 'email' | 'name' | 'password' | 'phoneNumber' | 'avatar' | 'roleId'>,
   ): Promise<UserType & { role: RoleType }> {
     return this.prismaService.user.create({
@@ -30,10 +32,10 @@ export class AuthRepository {
       include: {
         role: true,
       },
-    })
+    }) as any
   }
 
-  async createVerificationCode(
+  createVerificationCode(
     payload: Pick<VerificationCodeType, 'email' | 'type' | 'code' | 'expiresAt'>,
   ): Promise<VerificationCodeType> {
     return this.prismaService.verificationCode.upsert({
@@ -48,10 +50,10 @@ export class AuthRepository {
         code: payload.code,
         expiresAt: payload.expiresAt,
       },
-    })
+    }) as any
   }
 
-  async findUniqueVerificationCode(
+  findUniqueVerificationCode(
     uniqueValue:
       | { id: number }
       | {
@@ -63,7 +65,7 @@ export class AuthRepository {
   ): Promise<VerificationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
       where: uniqueValue,
-    })
+    }) as any
   }
 
   createRefreshToken(data: { token: string; userId: number; expiresAt: Date; deviceId: number }) {
@@ -80,7 +82,7 @@ export class AuthRepository {
     })
   }
 
-  async findUniqueUserIncludeRole(where: WhereUniqueUserType): Promise<(UserType & { role: RoleType }) | null> {
+  findUniqueUserIncludeRole(where: WhereUniqueUserType): Promise<(UserType & { role: RoleType }) | null> {
     return this.prismaService.user.findFirst({
       where: {
         ...where,
@@ -89,10 +91,10 @@ export class AuthRepository {
       include: {
         role: true,
       },
-    })
+    }) as any
   }
 
-  async findUniqueRefreshTokenIncludeUserRole(where: {
+  findUniqueRefreshTokenIncludeUserRole(where: {
     token: string
   }): Promise<(RefreshTokenType & { user: UserType & { role: RoleType } }) | null> {
     return this.prismaService.refreshToken.findUnique({
@@ -104,7 +106,7 @@ export class AuthRepository {
           },
         },
       },
-    })
+    }) as any
   }
 
   updateDevice(deviceId: number, data: Partial<DeviceType>): Promise<DeviceType> {
@@ -113,13 +115,13 @@ export class AuthRepository {
         id: deviceId,
       },
       data,
-    })
+    }) as any
   }
 
   deleteRefreshToken(where: { token: string }): Promise<RefreshTokenType> {
     return this.prismaService.refreshToken.delete({
       where,
-    })
+    }) as any
   }
 
   deleteVerificationCode(
@@ -134,6 +136,6 @@ export class AuthRepository {
   ): Promise<VerificationCodeType> {
     return this.prismaService.verificationCode.delete({
       where: uniqueValue,
-    })
+    }) as any
   }
 }

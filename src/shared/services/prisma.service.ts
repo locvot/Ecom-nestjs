@@ -8,7 +8,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       log: ['info'],
     })
   }
-
   async onModuleInit() {
     await this.$connect()
   }

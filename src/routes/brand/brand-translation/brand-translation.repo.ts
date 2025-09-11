@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import {
-  BrandTranslationType,
-  CreateBrandTranslationBodyType,
   GetBrandTranslationDetailResType,
+  CreateBrandTranslationBodyType,
+  BrandTranslationType,
   UpdateBrandTranslationBodyType,
-} from './brand-translation.model'
+} from 'src/routes/brand/brand-translation/brand-translation.model'
+import { SerializeAll } from 'src/shared/constants/serialize.decorator'
+import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class BrandTranslationRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -17,7 +19,7 @@ export class BrandTranslationRepo {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   create({
@@ -32,7 +34,7 @@ export class BrandTranslationRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
   update({
@@ -53,25 +55,36 @@ export class BrandTranslationRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
-  delete({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<BrandTranslationType> {
-    return isHard
-      ? this.prismaService.brandTranslation.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.brandTranslation.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+  delete(
+    {
+      id,
+      deletedById,
+    }: {
+      id: number
+      deletedById: number
+    },
+    isHard?: boolean,
+  ): Promise<BrandTranslationType> {
+    return (
+      isHard
+        ? this.prismaService.brandTranslation.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.brandTranslation.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

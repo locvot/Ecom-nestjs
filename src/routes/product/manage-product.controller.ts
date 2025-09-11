@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
-import { ManageProductService } from './manage-product.service'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
+import { ManageProductService } from 'src/routes/product/manage-product.service'
 import {
   CreateProductBodyDTO,
   GetManageProductsQueryDTO,
@@ -9,17 +9,17 @@ import {
   GetProductsResDTO,
   ProductDTO,
   UpdateProductBodyDTO,
-} from './product.dto'
+} from 'src/routes/product/product.dto'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
-import { AccessTokenPayload } from 'src/shared/types/jwt.type'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
+import { AccessTokenPayload } from 'src/shared/types/jwt.type'
 
-@Controller('manage-product/product')
+@Controller('manage-product/products')
 export class ManageProductController {
   constructor(private readonly manageProductService: ManageProductService) {}
 
   @Get()
-  @ZodSerializerDto(GetProductsResDTO)
+  @ZodResponse({ type: GetProductsResDTO })
   list(@Query() query: GetManageProductsQueryDTO, @ActiveUser() user: AccessTokenPayload) {
     return this.manageProductService.list({
       query,
@@ -29,7 +29,7 @@ export class ManageProductController {
   }
 
   @Get(':productId')
-  @ZodSerializerDto(GetProductDetailResDTO)
+  @ZodResponse({ type: GetProductDetailResDTO })
   findById(@Param() params: GetProductParamsDTO, @ActiveUser() user: AccessTokenPayload) {
     return this.manageProductService.getDetail({
       productId: params.productId,
@@ -39,7 +39,7 @@ export class ManageProductController {
   }
 
   @Post()
-  @ZodSerializerDto(GetProductDetailResDTO)
+  @ZodResponse({ type: GetProductDetailResDTO })
   create(@Body() body: CreateProductBodyDTO, @ActiveUser('userId') userId: number) {
     return this.manageProductService.create({
       data: body,
@@ -48,7 +48,7 @@ export class ManageProductController {
   }
 
   @Put(':productId')
-  @ZodSerializerDto(ProductDTO)
+  @ZodResponse({ type: ProductDTO })
   update(
     @Body() body: UpdateProductBodyDTO,
     @Param() params: GetProductParamsDTO,
@@ -63,7 +63,7 @@ export class ManageProductController {
   }
 
   @Delete(':productId')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   delete(@Param() params: GetProductParamsDTO, @ActiveUser() user: AccessTokenPayload) {
     return this.manageProductService.delete({
       productId: params.productId,

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { CartRepo } from './cart.repo'
-import { PaginationQueryType } from 'src/shared/models/request.model'
+import { AddToCartBodyType, DeleteCartBodyType, UpdateCartItemBodyType } from 'src/routes/cart/cart.model'
 import { I18nContext } from 'nestjs-i18n'
-import { AddToCartBodyType, DeleteCartBodyType, UpdateCartItemBodyType } from './cart.model'
+import { PaginationQueryType } from 'src/shared/models/request.model'
 
 @Injectable()
 export class CartService {
@@ -21,8 +21,12 @@ export class CartService {
     return this.cartRepo.create(userId, body)
   }
 
-  updateCartItem({ cartItemId, userId, body }: { cartItemId: number; userId: number; body: UpdateCartItemBodyType }) {
-    return this.cartRepo.update({ cartItemId, body, userId })
+  updateCartItem({ userId, body, cartItemId }: { userId: number; cartItemId: number; body: UpdateCartItemBodyType }) {
+    return this.cartRepo.update({
+      userId,
+      body,
+      cartItemId,
+    })
   }
 
   async deleteCart(userId: number, body: DeleteCartBodyType) {

@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { CategoryTranslationRepo } from './category-translation.repo'
 import { NotFoundRecordException } from 'src/shared/error'
-import { CreateCategoryTranslationBodyType, UpdateCategoryTranslationBodyType } from './category-translation.model'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { CategoryTranslationAlreadyExistsException } from './category-translation.error'
+import { CategoryTranslationRepo } from 'src/routes/category/category-translation/category-translation.repo'
+import { CategoryTranslationAlreadyExistsException } from 'src/routes/category/category-translation/category-translation.error'
+import {
+  CreateCategoryTranslationBodyType,
+  UpdateCategoryTranslationBodyType,
+} from 'src/routes/category/category-translation/category-translation.model'
 
 @Injectable()
 export class CategoryTranslationService {

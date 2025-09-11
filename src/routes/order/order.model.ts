@@ -1,6 +1,28 @@
 import { PaginationQuerySchema } from 'src/shared/models/request.model'
-import { OrderSchema, OrderStatusSchema, ProductSKUSnapshotSchema } from 'src/shared/models/shared-order.model'
+import { OrderSchema, OrderStatusSchema } from 'src/shared/models/shared-order.model'
 import { z } from 'zod'
+
+export const ProductSKUSnapshotSchema = z.object({
+  id: z.number(),
+  productId: z.number().nullable(),
+  productName: z.string(),
+  productTranslations: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      description: z.string(),
+      languageId: z.string(),
+    }),
+  ),
+  skuPrice: z.number(),
+  image: z.string(),
+  skuValue: z.string(),
+  skuId: z.number().nullable(),
+  orderId: z.number().nullable(),
+  quantity: z.number(),
+
+  createdAt: z.iso.datetime(),
+})
 
 export const GetOrderListResSchema = z.object({
   data: z.array(
@@ -43,7 +65,7 @@ export const CreateOrderBodySchema = z
   .min(1)
 
 export const CreateOrderResSchema = z.object({ orders: z.array(OrderSchema), paymentId: z.number() })
-
+export const CancelOrderBodySchema = z.object({})
 export const CancelOrderResSchema = OrderSchema
 
 export const GetOrderParamsSchema = z
@@ -51,8 +73,6 @@ export const GetOrderParamsSchema = z
     orderId: z.coerce.number().int().positive(),
   })
   .strict()
-
-export const CancelOrderBodySchema = z.object({})
 
 export type GetOrderListResType = z.infer<typeof GetOrderListResSchema>
 export type GetOrderListQueryType = z.infer<typeof GetOrderListQuerySchema>

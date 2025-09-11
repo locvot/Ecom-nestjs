@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { OrderRepo } from './order.repo'
-import { CreateOrderBodyType, GetOrderListQueryType } from './order.model'
-import { OrderProducer } from './order.producer'
+import { CreateOrderBodyType, GetOrderListQueryType } from 'src/routes/order/order.model'
+import { OrderRepo } from 'src/routes/order/order.repo'
 
 @Injectable()
 export class OrderService {
-  constructor(
-    private readonly orderRepo: OrderRepo,
-    private orderProducer: OrderProducer,
-  ) {}
+  constructor(private readonly orderRepo: OrderRepo) {}
 
-  list(userId: number, query: GetOrderListQueryType) {
+  async list(userId: number, query: GetOrderListQueryType) {
     return this.orderRepo.list(userId, query)
   }
 
@@ -19,11 +15,11 @@ export class OrderService {
     return result
   }
 
-  detail(userId: number, orderId: number) {
-    return this.orderRepo.detail(userId, orderId)
-  }
-
   cancel(userId: number, orderId: number) {
     return this.orderRepo.cancel(userId, orderId)
+  }
+
+  detail(userId: number, orderId: number) {
+    return this.orderRepo.detail(userId, orderId)
   }
 }
