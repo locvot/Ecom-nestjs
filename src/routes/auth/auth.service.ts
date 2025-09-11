@@ -99,7 +99,6 @@ export class AuthService {
       if (isUniqueConstraintPrismaError(error)) {
         throw EmailAlreadyExistsException
       }
-      console.log(error)
       throw error
     }
   }

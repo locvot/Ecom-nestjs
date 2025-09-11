@@ -37,9 +37,16 @@ import { CacheModule } from '@nestjs/cache-manager'
 import { createKeyv } from '@keyv/redis'
 import { LoggerModule } from 'nestjs-pino'
 import pino from 'pino'
+import { GraphQLModule } from '@nestjs/graphql'
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 
 @Module({
   imports: [
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: path.join('src/schema.gql'),
+      context: ({ req, res }) => ({ req, res }),
+    }),
     LoggerModule.forRoot({
       pinoHttp: {
         serializers: {
