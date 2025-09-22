@@ -8,7 +8,7 @@ import {
 } from 'src/routes/product/graphql/product.entity'
 import { ManageProductService } from 'src/routes/product/manage-product.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
-
+import { IsPublic } from 'src/shared/decorators/auth.decorator'
 import { GqlThrottlerGuard } from 'src/shared/guards/gql-throttler.guard'
 import { AccessTokenPayload } from 'src/shared/types/jwt.type'
 
@@ -32,6 +32,7 @@ export class ManageProductResolver {
     @Args('createProductInput') createProductInput: CreateProductInput,
     @ActiveUser('userId') userId: number,
   ) {
+    console.log('hello')
     return this.manageProductService.create({
       data: createProductInput,
       createdById: userId,
